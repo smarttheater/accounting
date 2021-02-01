@@ -3,7 +3,6 @@
  */
 import * as express from 'express';
 import * as PerformancesController from '../controllers/api/performances';
-import * as SuspendedPerformancesController from '../controllers/api/performances/suspended';
 import * as ReservationsController from '../controllers/api/reservations';
 
 import authentication from '../middlewares/authentication';
@@ -15,11 +14,6 @@ apiRouter.post('/reservations/cancel', authentication, ReservationsController.ca
 
 // 運行・オンライン販売停止設定コントローラー
 apiRouter.post('/performances/updateOnlineStatus', authentication, PerformancesController.updateOnlineStatus);
-
-// 運行・オンライン販売停止一覧コントローラー
-apiRouter.get('/performances/suspended', authentication, SuspendedPerformancesController.searchSuspendedPerformances);
-apiRouter.post(
-    '/performances/suspended/:performanceId/tasks/returnOrders', authentication, SuspendedPerformancesController.returnOrders);
 
 apiRouter.get('/events', authentication, PerformancesController.search);
 

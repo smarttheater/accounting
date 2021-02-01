@@ -14,14 +14,12 @@ exports.updateOnlineStatus = exports.search = void 0;
  * パフォーマンスAPIコントローラー
  */
 const cinerinoapi = require("@cinerino/sdk");
-// import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
 const createDebug = require("debug");
 const Email = require("email-templates");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
 const numeral = require("numeral");
-// import { User } from '../../user';
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 const POS_CLIENT_IDS = (typeof process.env.POS_CLIENT_ID === 'string')
     ? process.env.POS_CLIENT_ID.split(',')
     : [];
@@ -106,23 +104,6 @@ function updateOnlineStatus(req, res) {
             // const now = new Date();
             // 返金対象注文情報取得
             const targetOrders = yield getTargetReservationsForRefund(req, performanceIds);
-            // 返金ステータスセット(運行停止は未指示、減速・再開はNONE)
-            // const refundStatus: tttsapi.factory.performance.RefundStatus =
-            //     evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled ?
-            //         tttsapi.factory.performance.RefundStatus.NotInstructed :
-            //         tttsapi.factory.performance.RefundStatus.None;
-            // パフォーマンス更新
-            debug('updating performance online_sales_status...');
-            // const performanceService = new tttsapi.service.Event({
-            //     endpoint: <string>process.env.API_ENDPOINT,
-            //     auth: req.tttsAuthClient,
-            //     project: req.project
-            // });
-            // const reservationService = new cinerinoapi.service.Reservation({
-            //     endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            //     auth: req.tttsAuthClient,
-            //     project: { id: req.project?.id }
-            // });
             const eventService = new cinerinoapi.service.Event({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
                 auth: req.tttsAuthClient,
@@ -132,51 +113,8 @@ function updateOnlineStatus(req, res) {
                 id: { $in: performanceIds }
             }));
             const updatingEvents = searchEventsResult.data;
-            // const updateUser = (<User>req.staffUser).username;
             for (const updatingEvent of updatingEvents) {
                 const performanceId = updatingEvent.id;
-                // Chevreで予約検索(1パフォーマンスに対する予約はmax41件なので、これで十分)
-                // const searchReservationsResult = await reservationService.search({
-                //     limit: 100,
-                //     typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-                //     // 確定ステータスのみ保管すればよい
-                //     reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
-                //     reservationFor: { id: performanceId }
-                // });
-                // const reservationsAtLastUpdateDate: tttsapi.factory.performance.IReservationAtLastupdateDate[] =
-                //     searchReservationsResult.data
-                //         // frontendアプリケーションでの購入のみ保管すればよい
-                //         .filter((r) => {
-                //             const clientId = r.underName?.identifier?.find((p) => p.name === 'clientId')?.value;
-                //             return typeof clientId === 'string' && FRONTEND_CLIENT_IDS.includes(clientId);
-                //         })
-                //         .map((r) => {
-                //             const clientId = r.underName?.identifier?.find((p) => p.name === 'clientId')?.value;
-                //             return {
-                //                 id: String(r.id),
-                //                 status: <cinerinoapi.factory.chevre.reservationStatusType>r.reservationStatus,
-                //                 transaction_agent: {
-                //                     typeOf: cinerinoapi.factory.personType.Person,
-                //                     id: (typeof clientId === 'string') ? clientId : ''
-                //                 }
-                //             };
-                //         });
-                // await performanceService.updateExtension({
-                //     id: performanceId,
-                //     reservationsAtLastUpdateDate: reservationsAtLastUpdateDate,
-                //     eventStatus: evStatus,
-                //     onlineSalesStatusUpdateUser: updateUser,
-                //     onlineSalesStatusUpdateAt: now,
-                //     evServiceStatusUpdateUser: updateUser,
-                //     evServiceStatusUpdateAt: now,
-                //     refundStatus: refundStatus,
-                //     refundStatusUpdateUser: updateUser,
-                //     refundStatusUpdateAt: now,
-                //     // イベント情報をセット
-                //     startDate: updatingEvent.startDate,
-                //     endDate: updatingEvent.endDate,
-                //     additionalProperty: updatingEvent.additionalProperty
-                // });
                 let sendEmailMessageParams = [];
                 // 運行停止の時(＜必ずオンライン販売停止・infoセット済)、Cinerinoにメール送信指定
                 if (evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled) {

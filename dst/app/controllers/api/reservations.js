@@ -14,12 +14,11 @@ exports.cancel = exports.search = void 0;
  * 予約APIコントローラー
  */
 const cinerinoapi = require("@cinerino/sdk");
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
 const mypage_1 = require("../staff/mypage");
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 // const USE_CINERINO_SEARCH_RESERVATION = process.env.USE_CINERINO_SEARCH_RESERVATION === '1';
 const FRONTEND_CLIENT_IDS = (typeof process.env.FRONTEND_CLIENT_ID === 'string')
     ? process.env.FRONTEND_CLIENT_ID.split(',')
@@ -140,8 +139,8 @@ function search(req, res) {
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
             },
-            typeOf: tttsapi.factory.chevre.reservationType.EventReservation,
-            reservationStatuses: [tttsapi.factory.chevre.reservationStatusType.ReservationConfirmed],
+            typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+            reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
             reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
@@ -239,7 +238,7 @@ function addCustomAttributes(reservations) {
             orderNumber = orderNumberProperty;
         }
         const underName = reservation.underName;
-        // checkinsをtttsapi,cinerinoapiの両方のレスポンスに対応する
+        // checkinsをalvercaapi,cinerinoapiの両方のレスポンスに対応する
         let checkins = [];
         if (Array.isArray(reservation.checkins)) {
             checkins = reservation.checkins;

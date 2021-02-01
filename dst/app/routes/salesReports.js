@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * 売上レポートルーター
  */
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
+const alvercaapi = require("@alverca/sdk");
 const createDebug = require("debug");
 const express_1 = require("express");
 const moment = require("moment-timezone");
-const debug = createDebug('ttts-staff:router');
+const debug = createDebug('@smarttheater/accounting:router');
 const salesReportsRouter = express_1.Router();
 function getValue(inputValue) {
     // tslint:disable-next-line:no-null-keyword
@@ -100,7 +100,7 @@ salesReportsRouter.get('',
                 'reservation.id': { $exists: true, $eq: reservationIdEq }
             });
         }
-        const aggregateSalesService = new tttsapi.service.SalesReport({
+        const aggregateSalesService = new alvercaapi.service.SalesReport({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: req.project

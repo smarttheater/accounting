@@ -1,16 +1,15 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * セッションミドルウェア
- * @namespace middlewares.session
  */
-Object.defineProperty(exports, "__esModule", { value: true });
 const connectRedis = require("connect-redis");
 const session = require("express-session");
 const redis = require("redis");
 const redisStore = connectRedis(session);
 const COOKIE_MAX_AGE = 3600000; // 60 * 60 * 1000(session active 1 hour)
 exports.default = session({
-    secret: 'ttts-staff-session-secret',
+    secret: 'smarttheater-accounting-session-secret',
     resave: false,
     // Force a session identifier cookie to be set on every response.
     // The expiration is reset to the original maxAge, resetting the expiration countdown.

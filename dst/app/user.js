@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const cinerinoapi = require("@cinerino/sdk");
 /**
- * 予約管理ユーザー
+ * 管理ユーザー
  */
 class User {
     static PARSE(session, host, state) {

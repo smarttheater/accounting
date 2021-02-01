@@ -1,12 +1,12 @@
 /**
  * 売上レポートルーター
  */
-import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
+import * as alvercaapi from '@alverca/sdk';
 import * as createDebug from 'debug';
 import { Router } from 'express';
 import * as moment from 'moment-timezone';
 
-const debug = createDebug('ttts-staff:router');
+const debug = createDebug('@smarttheater/accounting:router');
 
 const salesReportsRouter = Router();
 
@@ -101,7 +101,7 @@ salesReportsRouter.get(
                 });
             }
 
-            const aggregateSalesService = new tttsapi.service.SalesReport({
+            const aggregateSalesService = new alvercaapi.service.SalesReport({
                 endpoint: <string>process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: req.project

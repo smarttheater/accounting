@@ -1,11 +1,5 @@
 # Smart Theater Accounting
 
-## Table of contents
-
-* [Usage](#usage)
-
-## Usage
-
 ### Environment variables
 
 | Name                          | Required | Value | Purpose               |

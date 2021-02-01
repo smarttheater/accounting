@@ -22,10 +22,6 @@ if (req.hasOwnProperty('route')) {
                     href="/staff/suspension/setting/performances"><span>オンライン<br>販売停止</span></a>
                 <% } %>
 
-                <% if (routeName !== '/suspension/list') { %>
-                <a class="btn-suspension-list" href="/staff/suspension/list"><span>販売停止<br>一覧表示</span></a>
-                <% } %>
-
                 <a class="btn-logout" href="<%= req.staffUser.generateLogoutUrl() %>"><span>ログアウト</span></a>
             </div>
 

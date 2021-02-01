@@ -18,9 +18,6 @@ staffRouter.post('/mypage/print/token', authentication, myPageController.getPrin
 // 運行・オンライン販売停止設定コントローラー
 staffRouter.get('/suspension/setting/performances', authentication, suspensionController.performances);
 
-// 運行・オンライン販売停止一覧コントローラー
-staffRouter.get('/suspension/list', authentication, suspensionController.index);
-
 staffRouter.get(
     '/auth',
     (req, res) => {

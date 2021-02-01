@@ -1,13 +1,13 @@
 /**
  * レポート出力コントローラー
  */
-import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
+import * as alvercaapi from '@alverca/sdk';
 import * as createDebug from 'debug';
 import { Request, Response } from 'express';
 import { OK } from 'http-status';
 import * as moment from 'moment-timezone';
 
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 
 const RESERVATION_START_DATE = process.env.RESERVATION_START_DATE;
 
@@ -102,7 +102,7 @@ export async function search(req: Request, res: Response): Promise<void> {
             });
         }
 
-        const aggregateSalesService = new tttsapi.service.SalesReport({
+        const aggregateSalesService = new alvercaapi.service.SalesReport({
             endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: req.project
@@ -196,7 +196,7 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
             });
         }
 
-        const aggregateSalesService = new tttsapi.service.SalesReport({
+        const aggregateSalesService = new alvercaapi.service.SalesReport({
             endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: req.project

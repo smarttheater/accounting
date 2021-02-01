@@ -17,7 +17,7 @@ const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const jwt = require("jsonwebtoken");
 const querystring = require("querystring");
-const debug = createDebug('ttts-staff:controllers:staff:mypage');
+const debug = createDebug('@smarttheater/accounting:controllers:staff:mypage');
 const layout = 'layouts/staff/layout';
 /**
  * 予約印刷トークンを発行する

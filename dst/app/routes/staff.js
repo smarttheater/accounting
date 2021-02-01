@@ -14,8 +14,6 @@ staffRouter.get('/mypage/printByToken', authentication_1.default, myPageControll
 staffRouter.post('/mypage/print/token', authentication_1.default, myPageController.getPrintToken);
 // 運行・オンライン販売停止設定コントローラー
 staffRouter.get('/suspension/setting/performances', authentication_1.default, suspensionController.performances);
-// 運行・オンライン販売停止一覧コントローラー
-staffRouter.get('/suspension/list', authentication_1.default, suspensionController.index);
 staffRouter.get('/auth', (req, res) => {
     try {
         if (req.session === undefined) {

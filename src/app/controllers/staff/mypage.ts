@@ -8,7 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as querystring from 'querystring';
 
-const debug = createDebug('ttts-staff:controllers:staff:mypage');
+const debug = createDebug('@smarttheater/accounting:controllers:staff:mypage');
 const layout: string = 'layouts/staff/layout';
 
 /**

@@ -1,4 +1,4 @@
-import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
+import * as alvercaapi from '@alverca/sdk';
 
 import { User } from '../app/user';
 
@@ -7,7 +7,7 @@ declare global {
         // tslint:disable-next-line:interface-name
         export interface Request {
             staffUser?: User;
-            tttsAuthClient: tttsapi.auth.OAuth2;
+            tttsAuthClient: alvercaapi.auth.OAuth2;
             project?: {
                 id: string;
             };

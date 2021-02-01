@@ -8,7 +8,7 @@ import * as createDebug from 'debug';
 import * as http from 'http';
 import * as app from './app/app';
 
-const debug = createDebug('ttts-staff:index');
+const debug = createDebug('@smarttheater/accounting:index');
 
 /**
  * Get port from environment and store in Express.
