@@ -18,7 +18,6 @@ const createDebug = require("debug");
 const Email = require("email-templates");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
-const numeral = require("numeral");
 const debug = createDebug('@smarttheater/accounting:controllers');
 const POS_CLIENT_IDS = (typeof process.env.POS_CLIENT_ID === 'string')
     ? process.env.POS_CLIENT_ID.split(',')
@@ -364,7 +363,7 @@ function getTicketInfo(order, locale) {
         if (ticketInfos[ticketType.identifier] === undefined) {
             ticketInfos[ticketType.identifier] = {
                 ticket_type_name: ticketType.name[locale],
-                charge: `\\${numeral(price).format('0,0')}`,
+                charge: `\\${Number(price).toLocaleString('ja-JP')}`,
                 count: 1
             };
         }

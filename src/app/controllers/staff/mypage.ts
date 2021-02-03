@@ -39,7 +39,7 @@ export async function createPrintToken(
         };
         debug('signing jwt...', payload);
 
-        jwt.sign(payload, <string>process.env.TTTS_TOKEN_SECRET, (jwtErr, token) => {
+        jwt.sign(payload, <string>process.env.PRINT_TOKEN_SECRET, (jwtErr, token) => {
             if (jwtErr instanceof Error) {
                 reject(jwtErr);
             } else {

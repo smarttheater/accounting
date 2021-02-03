@@ -8,7 +8,6 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 // tslint:disable-next-line:no-require-imports
 // import partials = require('express-partials');
-const expressValidator = require("express-validator");
 const multer = require("multer");
 const favicon = require("serve-favicon");
 const authentication_1 = require("./middlewares/authentication");
@@ -47,7 +46,6 @@ app.use(multer({ storage: storage }).any());
 app.use(cookieParser());
 app.use(express.static(`${__dirname}/../../public`));
 app.use('/node_modules', express.static(`${__dirname}/../../node_modules`));
-app.use(expressValidator()); // バリデーション
 app.use(setLocals_1.default); // ローカル変数セット
 // GCPへのリダイレクト指定があれば全てリダイレクト
 const APP_STOPPED = process.env.APP_STOPPED === '1';

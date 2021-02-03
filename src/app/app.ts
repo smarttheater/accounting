@@ -7,7 +7,6 @@ import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 // tslint:disable-next-line:no-require-imports
 // import partials = require('express-partials');
-import * as expressValidator from 'express-validator';
 import * as multer from 'multer';
 import * as favicon from 'serve-favicon';
 
@@ -57,8 +56,6 @@ app.use(multer({ storage: storage }).any());
 app.use(cookieParser());
 app.use(express.static(`${__dirname}/../../public`));
 app.use('/node_modules', express.static(`${__dirname}/../../node_modules`));
-
-app.use(expressValidator()); // バリデーション
 
 app.use(setLocals); // ローカル変数セット
 

@@ -8,7 +8,6 @@ import * as Email from 'email-templates';
 import { Request, Response } from 'express';
 import { INTERNAL_SERVER_ERROR, NO_CONTENT } from 'http-status';
 import * as moment from 'moment-timezone';
-import * as numeral from 'numeral';
 
 const debug = createDebug('@smarttheater/accounting:controllers');
 
@@ -428,7 +427,7 @@ function getTicketInfo(order: cinerinoapi.factory.order.IOrder, locale: string):
         if (ticketInfos[ticketType.identifier] === undefined) {
             ticketInfos[ticketType.identifier] = {
                 ticket_type_name: (<any>ticketType.name)[locale],
-                charge: `\\${numeral(price).format('0,0')}`,
+                charge: `\\${Number(price).toLocaleString('ja-JP')}`,
                 count: 1
             };
         } else {

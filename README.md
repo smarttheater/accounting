@@ -15,7 +15,7 @@
 | `REDIS_PORT`                  | true     |       | redis port            |
 | `REDIS_KEY`                   | true     |       | redis key             |
 | `RESERVATIONS_PRINT_URL`      | true     |       | print URL             |
-| `TTTS_TOKEN_SECRET`           | true     |       | print token secret    |
+| `PRINT_TOKEN_SECRET`          | true     |       | print token secret    |
 | `POS_CLIENT_ID`               | true     |       | POS client ids        |
 | `FRONTEND_CLIENT_ID`          | true     |       | frontend client ids   |
 | `STAFF_CLIENT_IDS`            | true     |       | staff client ids      |

@@ -35,7 +35,7 @@ function createPrintToken(object, orders) {
                 })
             };
             debug('signing jwt...', payload);
-            jwt.sign(payload, process.env.TTTS_TOKEN_SECRET, (jwtErr, token) => {
+            jwt.sign(payload, process.env.PRINT_TOKEN_SECRET, (jwtErr, token) => {
                 if (jwtErr instanceof Error) {
                     reject(jwtErr);
                 }
