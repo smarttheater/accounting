@@ -18,6 +18,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v7.0.0 - 2021-02-03
+
+### Changed
+
+- 予約印刷最適化
+- Cinerinoサービスインスタンスにプロジェクトを指定するように調整
+- @alverca/sdkで再構築
+
+### Removed
+
+- 販売停止時の返金処理対象パフォーマンスへの連携を廃止
+- 入場時の返金処理対象パフォーマンスへの連携を廃止
+- 販売停止一覧を削除
+
 ## v6.20.0 - 2021-01-25
 
 ### Added

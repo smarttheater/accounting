@@ -12,19 +12,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * ユーザー認証ミドルウェア
  */
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
+const alvercaapi = require("@alverca/sdk");
 const user_1 = require("../user");
 exports.default = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     req.staffUser = user_1.User.PARSE(req.session, req.hostname, req.originalUrl);
     // 既ログインの場合
     if (req.staffUser.isAuthenticated()) {
-        // tttsapi認証クライアントをリクエストオブジェクトにセット
+        // alvercaapi認証クライアントをリクエストオブジェクトにセット
         const cognitoCredentials = req.session.cognitoCredentials;
         if (cognitoCredentials === undefined) {
             next(new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。'));
             return;
         }
-        const oauth2Client = new tttsapi.auth.OAuth2({
+        const oauth2Client = new alvercaapi.auth.OAuth2({
             domain: process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: process.env.API_CLIENT_ID,
             clientSecret: process.env.API_CLIENT_SECRET

@@ -17,7 +17,7 @@ const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const jwt = require("jsonwebtoken");
 const querystring = require("querystring");
-const debug = createDebug('ttts-staff:controllers:staff:mypage');
+const debug = createDebug('@smarttheater/accounting:controllers:staff:mypage');
 const layout = 'layouts/staff/layout';
 /**
  * 予約印刷トークンを発行する
@@ -35,7 +35,7 @@ function createPrintToken(object, orders) {
                 })
             };
             debug('signing jwt...', payload);
-            jwt.sign(payload, process.env.TTTS_TOKEN_SECRET, (jwtErr, token) => {
+            jwt.sign(payload, process.env.PRINT_TOKEN_SECRET, (jwtErr, token) => {
                 if (jwtErr instanceof Error) {
                     reject(jwtErr);
                 }
@@ -77,10 +77,12 @@ function index(req, res, next) {
 exports.index = index;
 const TICKET_CLERK_USERNAMES_EXCLUDED = ['1F-ELEVATOR', 'TOPDECK-ELEVATOR', 'LANE', 'GATE'];
 function searchTicketClerks(req) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const iamService = new cinerinoapi.service.IAM({
             endpoint: process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
         });
         const searchMembersResult = yield iamService.searchMembers({
             member: { typeOf: { $eq: cinerinoapi.factory.personType.Person } }
@@ -106,6 +108,7 @@ exports.searchTicketClerks = searchTicketClerks;
  * A4印刷
  */
 function print(req, res, next) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const ids = req.query.ids;
@@ -116,7 +119,8 @@ function print(req, res, next) {
             if (ids.length > 0 && orderNumbers.length === 0) {
                 const reservationService = new cinerinoapi.service.Reservation({
                     endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
+                    auth: req.tttsAuthClient,
+                    project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
                 });
                 const searchReservationsResult = yield reservationService.search({
                     limit: 100,
@@ -138,7 +142,8 @@ function print(req, res, next) {
                 // 印刷対象注文検索
                 const orderService = new cinerinoapi.service.Order({
                     endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
+                    auth: req.tttsAuthClient,
+                    project: { id: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id }
                 });
                 const searchOrdersResult = yield orderService.search({
                     limit: 100,
@@ -169,6 +174,7 @@ exports.print = print;
  * 印刷情報をトークン化する
  */
 function getPrintToken(req, res, next) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const ids = req.body.ids;
@@ -176,32 +182,32 @@ function getPrintToken(req, res, next) {
             orderNumbers = [...new Set(orderNumbers)];
             debug('printing reservations...ids:', ids, 'orderNumber:', orderNumbers);
             // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
-            if (ids.length > 0 && orderNumbers.length === 0) {
-                const reservationService = new cinerinoapi.service.Reservation({
-                    endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
-                });
-                const searchReservationsResult = yield reservationService.search({
-                    limit: 100,
-                    typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-                    id: { $in: ids }
-                });
-                orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
-                        var _a, _b;
-                        let orderNumber = '';
-                        const orderNumberProperty = (_b = (_a = reservation.underName) === null || _a === void 0 ? void 0 : _a.identifier) === null || _b === void 0 ? void 0 : _b.find((p) => p.name === 'orderNumber');
-                        if (orderNumberProperty !== undefined) {
-                            orderNumber = orderNumberProperty.value;
-                        }
-                        return orderNumber;
-                    }))];
-            }
+            // if (ids.length > 0 && orderNumbers.length === 0) {
+            //     const reservationService = new cinerinoapi.service.Reservation({
+            //         endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            //         auth: req.tttsAuthClient
+            //     });
+            //     const searchReservationsResult = await reservationService.search({
+            //         limit: 100,
+            //         typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+            //         id: { $in: ids }
+            //     });
+            //     orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
+            //         let orderNumber = '';
+            //         const orderNumberProperty = reservation.underName?.identifier?.find((p) => p.name === 'orderNumber');
+            //         if (orderNumberProperty !== undefined) {
+            //             orderNumber = orderNumberProperty.value;
+            //         }
+            //         return orderNumber;
+            //     }))];
+            // }
             let orders = [];
             if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
                 // 印刷対象注文検索
                 const orderService = new cinerinoapi.service.Order({
                     endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
+                    auth: req.tttsAuthClient,
+                    project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
                 });
                 const searchOrdersResult = yield orderService.search({
                     limit: 100,

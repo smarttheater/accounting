@@ -2,8 +2,8 @@
  * 入場コントローラー
  * 上映当日入場画面から使う機能はここにあります。
  */
+import * as alvercaapi from '@alverca/sdk';
 import * as cinerinoapi from '@cinerino/sdk';
-import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
 import { NextFunction, Request, Response } from 'express';
 // tslint:disable-next-line:ordered-imports
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT } from 'http-status';
@@ -91,7 +91,8 @@ export async function getReservation(req: Request, res: Response): Promise<void>
     try {
         const reservationService = new cinerinoapi.service.Reservation({
             endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: req.project?.id }
         });
         const searchReservationsResult = await reservationService.search<cinerinoapi.factory.chevre.reservationType.EventReservation>({
             typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -105,7 +106,7 @@ export async function getReservation(req: Request, res: Response): Promise<void>
             return;
         }
 
-        if (reservation.reservationStatus !== tttsapi.factory.chevre.reservationStatusType.ReservationConfirmed) {
+        if (reservation.reservationStatus !== alvercaapi.factory.chevre.reservationStatusType.ReservationConfirmed) {
             res.status(NOT_FOUND)
                 .json(null);
 
@@ -193,7 +194,8 @@ export async function addCheckIn(req: Request, res: Response): Promise<void> {
         // 予約取得
         const reservationService = new cinerinoapi.service.Reservation({
             endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: req.project?.id }
         });
         const searchReservationsResult = await reservationService.search<cinerinoapi.factory.chevre.reservationType.EventReservation>({
             typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -217,7 +219,8 @@ export async function addCheckIn(req: Request, res: Response): Promise<void> {
             // getToken
             const tokenService = new cinerinoapi.service.Token({
                 endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: req.project?.id }
             });
             const getTokenResult = await tokenService.getToken({ code });
             token = getTokenResult.token;
@@ -264,9 +267,6 @@ export async function addCheckIn(req: Request, res: Response): Promise<void> {
             }
         });
 
-        // 入場済予約リスト更新
-        await updateCheckedReservations(req, reservation);
-
         res.status(CREATED)
             .json(checkin);
     } catch (error) {
@@ -291,7 +291,8 @@ async function publishCode(
         if (typeof orderNumber === 'string' && typeof telephone === 'string') {
             const orderService = new cinerinoapi.service.Order({
                 endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: req.project?.id }
             });
 
             const authorizeOrderResult = await orderService.authorize({
@@ -342,7 +343,8 @@ export async function removeCheckIn(req: Request, res: Response): Promise<void> 
         // 予約取得
         const reservationService = new cinerinoapi.service.Reservation({
             endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: req.project?.id }
         });
         const searchReservationsResult = await reservationService.search<cinerinoapi.factory.chevre.reservationType.EventReservation>({
             typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -380,9 +382,6 @@ export async function removeCheckIn(req: Request, res: Response): Promise<void> 
             }
         }
 
-        // 入場済予約リスト更新
-        await updateCheckedReservations(req, reservation);
-
         res.status(NO_CONTENT)
             .end();
     } catch (error) {
@@ -392,44 +391,4 @@ export async function removeCheckIn(req: Request, res: Response): Promise<void> 
                 message: error.message
             });
     }
-}
-
-async function updateCheckedReservations(
-    req: Request,
-    reservation: cinerinoapi.factory.chevre.reservation.IReservation<cinerinoapi.factory.chevre.reservationType.EventReservation>
-) {
-    try {
-        // 予約取得
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
-        });
-
-        // 入場済予約検索
-        const searchReservationsResult4event = await reservationService.search({
-            limit: 100,
-            typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-            reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
-            reservationFor: { id: reservation.reservationFor.id }
-        });
-        const checkedReservations: { id: string }[] = searchReservationsResult4event.data
-            .filter((r) => r.reservedTicket?.dateUsed !== undefined && r.reservedTicket?.dateUsed !== null)
-            .map((r) => {
-                return { id: String(r.id) };
-            });
-
-        const performanceService = new tttsapi.service.Event({
-            endpoint: <string>process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient,
-            project: req.project
-        });
-        await performanceService.updateExtension({
-            id: reservation.reservationFor.id,
-            checkedReservations
-        });
-    } catch (error) {
-        // tslint:disable-next-line:no-console
-        console.error('updateCheckedReservations failed', error);
-    }
-
 }

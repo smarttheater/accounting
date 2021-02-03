@@ -6,7 +6,7 @@ interface IGroup {
 }
 
 /**
- * 予約管理ユーザー
+ * 管理ユーザー
  */
 export class User {
     public group: IGroup;

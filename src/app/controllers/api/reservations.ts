@@ -2,7 +2,6 @@
  * 予約APIコントローラー
  */
 import * as cinerinoapi from '@cinerino/sdk';
-import * as tttsapi from '@motionpicture/ttts-api-nodejs-client';
 
 import * as createDebug from 'debug';
 import { NextFunction, Request, Response } from 'express';
@@ -13,7 +12,7 @@ import { PAYMENT_METHODS } from '../staff/mypage';
 
 import { ICheckin, IReservation } from '../../util/reservation';
 
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 
 // const USE_CINERINO_SEARCH_RESERVATION = process.env.USE_CINERINO_SEARCH_RESERVATION === '1';
 const FRONTEND_CLIENT_IDS = (typeof process.env.FRONTEND_CLIENT_ID === 'string')
@@ -147,8 +146,8 @@ export async function search(req: Request, res: Response): Promise<void> {
             'reservedTicket.ticketType.id': 1,
             'reservedTicket.ticketedSeat.seatNumber': 1
         },
-        typeOf: tttsapi.factory.chevre.reservationType.EventReservation,
-        reservationStatuses: [tttsapi.factory.chevre.reservationStatusType.ReservationConfirmed],
+        typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+        reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
         reservationFor: {
             startFrom: eventStartFrom,
             startThrough: eventStartThrough
@@ -190,7 +189,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     debug('searching reservations...', searchConditions);
     const reservationService = new cinerinoapi.service.Reservation({
         endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-        auth: req.tttsAuthClient
+        auth: req.tttsAuthClient,
+        project: { id: req.project?.id }
     });
 
     try {
@@ -258,7 +258,7 @@ function addCustomAttributes(reservations: IReservation[]): IReservation[] {
 
         const underName = reservation.underName;
 
-        // checkinsをtttsapi,cinerinoapiの両方のレスポンスに対応する
+        // checkinsをalvercaapi,cinerinoapiの両方のレスポンスに対応する
         let checkins: ICheckin[] = [];
         if (Array.isArray(reservation.checkins)) {
             checkins = reservation.checkins;
@@ -353,7 +353,8 @@ export async function cancel(req: Request, res: Response, next: NextFunction): P
 
         const reservationService = new cinerinoapi.service.Reservation({
             endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: req.project?.id }
         });
 
         const promises = reservationIds.map(async (id) => {

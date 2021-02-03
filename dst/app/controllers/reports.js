@@ -13,11 +13,11 @@ exports.getAggregateSales = exports.ReportType = exports.search = void 0;
 /**
  * レポート出力コントローラー
  */
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
+const alvercaapi = require("@alverca/sdk");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 const RESERVATION_START_DATE = process.env.RESERVATION_START_DATE;
 // tslint:disable-next-line:max-func-body-length
 function search(req, res) {
@@ -104,7 +104,7 @@ function search(req, res) {
                     'reservation.id': { $exists: true, $eq: reservationIdEq }
                 });
             }
-            const aggregateSalesService = new tttsapi.service.SalesReport({
+            const aggregateSalesService = new alvercaapi.service.SalesReport({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: req.project
@@ -190,7 +190,7 @@ function getAggregateSales(req, res) {
                     }
                 });
             }
-            const aggregateSalesService = new tttsapi.service.SalesReport({
+            const aggregateSalesService = new alvercaapi.service.SalesReport({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: req.project

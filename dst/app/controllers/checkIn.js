@@ -14,8 +14,8 @@ exports.removeCheckIn = exports.addCheckIn = exports.getReservation = exports.ge
  * 入場コントローラー
  * 上映当日入場画面から使う機能はここにあります。
  */
+const alvercaapi = require("@alverca/sdk");
 const cinerinoapi = require("@cinerino/sdk");
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
 // tslint:disable-next-line:ordered-imports
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -93,6 +93,7 @@ exports.getReservations = getReservations;
  * 予約情報取得
  */
 function getReservation(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         if (req.staffUser === undefined) {
             throw new Error('checkinAdminUser not defined.');
@@ -103,7 +104,8 @@ function getReservation(req, res) {
         try {
             const reservationService = new cinerinoapi.service.Reservation({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
             const searchReservationsResult = yield reservationService.search({
                 typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -115,7 +117,7 @@ function getReservation(req, res) {
                     .json(null);
                 return;
             }
-            if (reservation.reservationStatus !== tttsapi.factory.chevre.reservationStatusType.ReservationConfirmed) {
+            if (reservation.reservationStatus !== alvercaapi.factory.chevre.reservationStatusType.ReservationConfirmed) {
                 res.status(http_status_1.NOT_FOUND)
                     .json(null);
                 return;
@@ -173,6 +175,7 @@ exports.getReservation = getReservation;
  */
 // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
 function addCheckIn(req, res) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (req.staffUser === undefined) {
@@ -192,7 +195,8 @@ function addCheckIn(req, res) {
             // 予約取得
             const reservationService = new cinerinoapi.service.Reservation({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
             const searchReservationsResult = yield reservationService.search({
                 typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -213,7 +217,8 @@ function addCheckIn(req, res) {
                 // getToken
                 const tokenService = new cinerinoapi.service.Token({
                     endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
+                    auth: req.tttsAuthClient,
+                    project: { id: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id }
                 });
                 const getTokenResult = yield tokenService.getToken({ code });
                 token = getTokenResult.token;
@@ -246,8 +251,6 @@ function addCheckIn(req, res) {
                 // where: "Staff"
                 includesActionId: '1'
             }));
-            // 入場済予約リスト更新
-            yield updateCheckedReservations(req, reservation);
             res.status(http_status_1.CREATED)
                 .json(checkin);
         }
@@ -262,7 +265,7 @@ function addCheckIn(req, res) {
 }
 exports.addCheckIn = addCheckIn;
 function publishCode(req, reservation) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         let code;
         try {
@@ -271,7 +274,8 @@ function publishCode(req, reservation) {
             if (typeof orderNumber === 'string' && typeof telephone === 'string') {
                 const orderService = new cinerinoapi.service.Order({
                     endpoint: process.env.CINERINO_API_ENDPOINT,
-                    auth: req.tttsAuthClient
+                    auth: req.tttsAuthClient,
+                    project: { id: (_e = req.project) === null || _e === void 0 ? void 0 : _e.id }
                 });
                 const authorizeOrderResult = yield orderService.authorize({
                     object: {
@@ -300,6 +304,7 @@ function publishCode(req, reservation) {
  * チェックイン取り消し
  */
 function removeCheckIn(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (req.staffUser === undefined) {
@@ -320,7 +325,8 @@ function removeCheckIn(req, res) {
             // 予約取得
             const reservationService = new cinerinoapi.service.Reservation({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
             const searchReservationsResult = yield reservationService.search({
                 typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
@@ -356,8 +362,6 @@ function removeCheckIn(req, res) {
                     console.log('cancelUseAction failed.', error);
                 }
             }
-            // 入場済予約リスト更新
-            yield updateCheckedReservations(req, reservation);
             res.status(http_status_1.NO_CONTENT)
                 .end();
         }
@@ -371,39 +375,3 @@ function removeCheckIn(req, res) {
     });
 }
 exports.removeCheckIn = removeCheckIn;
-function updateCheckedReservations(req, reservation) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            // 予約取得
-            const reservationService = new cinerinoapi.service.Reservation({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
-            });
-            // 入場済予約検索
-            const searchReservationsResult4event = yield reservationService.search({
-                limit: 100,
-                typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-                reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
-                reservationFor: { id: reservation.reservationFor.id }
-            });
-            const checkedReservations = searchReservationsResult4event.data
-                .filter((r) => { var _a, _b; return ((_a = r.reservedTicket) === null || _a === void 0 ? void 0 : _a.dateUsed) !== undefined && ((_b = r.reservedTicket) === null || _b === void 0 ? void 0 : _b.dateUsed) !== null; })
-                .map((r) => {
-                return { id: String(r.id) };
-            });
-            const performanceService = new tttsapi.service.Event({
-                endpoint: process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
-            });
-            yield performanceService.updateExtension({
-                id: reservation.reservationFor.id,
-                checkedReservations
-            });
-        }
-        catch (error) {
-            // tslint:disable-next-line:no-console
-            console.error('updateCheckedReservations failed', error);
-        }
-    });
-}

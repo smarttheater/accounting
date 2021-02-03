@@ -14,13 +14,11 @@ exports.updateOnlineStatus = exports.search = void 0;
  * パフォーマンスAPIコントローラー
  */
 const cinerinoapi = require("@cinerino/sdk");
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
 const createDebug = require("debug");
 const Email = require("email-templates");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
-const numeral = require("numeral");
-const debug = createDebug('ttts-staff:controllers');
+const debug = createDebug('@smarttheater/accounting:controllers');
 const POS_CLIENT_IDS = (typeof process.env.POS_CLIENT_ID === 'string')
     ? process.env.POS_CLIENT_ID.split(',')
     : [];
@@ -44,6 +42,7 @@ function getUnitPriceByAcceptedOffer(offer) {
  * パフォーマンス検索
  */
 function search(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // Cinerinoで検索
@@ -55,7 +54,8 @@ function search(req, res) {
             const day = String(req.query.day);
             const eventService = new cinerinoapi.service.Event({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
             const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent, 
                 // tslint:disable-next-line:no-magic-numbers
@@ -88,6 +88,7 @@ exports.search = search;
  */
 // tslint:disable-next-line:max-func-body-length
 function updateOnlineStatus(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // パフォーマンスIDリストをjson形式で受け取る
@@ -99,78 +100,20 @@ function updateOnlineStatus(req, res) {
             const evStatus = req.body.evStatus;
             const notice = req.body.notice;
             debug('updating performances...', performanceIds, evStatus, notice);
-            const now = new Date();
+            // const now = new Date();
             // 返金対象注文情報取得
             const targetOrders = yield getTargetReservationsForRefund(req, performanceIds);
-            // 返金ステータスセット(運行停止は未指示、減速・再開はNONE)
-            const refundStatus = evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled ?
-                tttsapi.factory.performance.RefundStatus.NotInstructed :
-                tttsapi.factory.performance.RefundStatus.None;
-            // パフォーマンス更新
-            debug('updating performance online_sales_status...');
-            const performanceService = new tttsapi.service.Event({
-                endpoint: process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
-            });
-            const reservationService = new cinerinoapi.service.Reservation({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
-            });
             const eventService = new cinerinoapi.service.Event({
                 endpoint: process.env.CINERINO_API_ENDPOINT,
-                auth: req.tttsAuthClient
+                auth: req.tttsAuthClient,
+                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
             const searchEventsResult = yield eventService.search(Object.assign({ limit: 100, typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent }, {
                 id: { $in: performanceIds }
             }));
             const updatingEvents = searchEventsResult.data;
-            const updateUser = req.staffUser.username;
             for (const updatingEvent of updatingEvents) {
                 const performanceId = updatingEvent.id;
-                // Chevreで予約検索(1パフォーマンスに対する予約はmax41件なので、これで十分)
-                const searchReservationsResult = yield reservationService.search({
-                    limit: 100,
-                    typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-                    // 確定ステータスのみ保管すればよい
-                    reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
-                    reservationFor: { id: performanceId }
-                });
-                const reservationsAtLastUpdateDate = searchReservationsResult.data
-                    // frontendアプリケーションでの購入のみ保管すればよい
-                    .filter((r) => {
-                    var _a, _b, _c;
-                    const clientId = (_c = (_b = (_a = r.underName) === null || _a === void 0 ? void 0 : _a.identifier) === null || _b === void 0 ? void 0 : _b.find((p) => p.name === 'clientId')) === null || _c === void 0 ? void 0 : _c.value;
-                    return typeof clientId === 'string' && FRONTEND_CLIENT_IDS.includes(clientId);
-                })
-                    .map((r) => {
-                    var _a, _b, _c;
-                    const clientId = (_c = (_b = (_a = r.underName) === null || _a === void 0 ? void 0 : _a.identifier) === null || _b === void 0 ? void 0 : _b.find((p) => p.name === 'clientId')) === null || _c === void 0 ? void 0 : _c.value;
-                    return {
-                        id: String(r.id),
-                        status: r.reservationStatus,
-                        transaction_agent: {
-                            typeOf: cinerinoapi.factory.personType.Person,
-                            id: (typeof clientId === 'string') ? clientId : ''
-                        }
-                    };
-                });
-                yield performanceService.updateExtension({
-                    id: performanceId,
-                    reservationsAtLastUpdateDate: reservationsAtLastUpdateDate,
-                    eventStatus: evStatus,
-                    onlineSalesStatusUpdateUser: updateUser,
-                    onlineSalesStatusUpdateAt: now,
-                    evServiceStatusUpdateUser: updateUser,
-                    evServiceStatusUpdateAt: now,
-                    refundStatus: refundStatus,
-                    refundStatusUpdateUser: updateUser,
-                    refundStatusUpdateAt: now,
-                    // イベント情報をセット
-                    startDate: updatingEvent.startDate,
-                    endDate: updatingEvent.endDate,
-                    additionalProperty: updatingEvent.additionalProperty
-                });
                 let sendEmailMessageParams = [];
                 // 運行停止の時(＜必ずオンライン販売停止・infoセット済)、Cinerinoにメール送信指定
                 if (evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled) {
@@ -210,14 +153,17 @@ exports.updateOnlineStatus = updateOnlineStatus;
  */
 // tslint:disable-next-line:max-func-body-length
 function getTargetReservationsForRefund(req, performanceIds) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const orderService = new cinerinoapi.service.Order({
             endpoint: process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
         });
         const reservationService = new cinerinoapi.service.Reservation({
             endpoint: process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
+            auth: req.tttsAuthClient,
+            project: { id: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id }
         });
         let targetReservations = [];
         const limit4reservations = 100;
@@ -417,7 +363,7 @@ function getTicketInfo(order, locale) {
         if (ticketInfos[ticketType.identifier] === undefined) {
             ticketInfos[ticketType.identifier] = {
                 ticket_type_name: ticketType.name[locale],
-                charge: `\\${numeral(price).format('0,0')}`,
+                charge: `\\${Number(price).toLocaleString('ja-JP')}`,
                 count: 1
             };
         }

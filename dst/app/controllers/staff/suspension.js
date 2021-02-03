@@ -9,29 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.performances = exports.index = void 0;
+exports.performances = void 0;
 /**
  * 運行・オンライン販売停止一覧コントローラー
  */
-const tttsapi = require("@motionpicture/ttts-api-nodejs-client");
+const cinerinoaapi = require("@cinerino/sdk");
 const layout = 'layouts/staff/layout';
-/**
- * 運行・オンライン販売停止一覧
- */
-function index(__, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            res.render('staff/suspension/list', {
-                layout: layout,
-                RefundStatus: tttsapi.factory.performance.RefundStatus
-            });
-        }
-        catch (error) {
-            next(error);
-        }
-    });
-}
-exports.index = index;
 /**
  * スケジュール選択
  */
@@ -41,7 +24,7 @@ function performances(__, res, next) {
             // 運行・オンライン販売停止設定画面表示
             res.render('staff/suspension/performances', {
                 layout: layout,
-                EventStatusType: tttsapi.factory.chevre.eventStatusType
+                EventStatusType: cinerinoaapi.factory.chevre.eventStatusType
             });
         }
         catch (error) {
