@@ -165,7 +165,7 @@ export async function search(req: Request, res: Response): Promise<void> {
             telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
             identifier: {
                 $all: [
-                    ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
+                    // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                     ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                 ],
                 $in: [
@@ -182,7 +182,17 @@ export async function search(req: Request, res: Response): Promise<void> {
         },
         additionalTicketText: (watcherName !== null)
             ? { $regex: watcherName, $options: 'i' }
-            : undefined
+            : undefined,
+        ...{
+            // brokerのusernameで検索
+            broker: {
+                identifier: {
+                    $all: [
+                        ...(owner !== null) ? [{ name: 'username', value: owner }] : []
+                    ]
+                }
+            }
+        }
     };
 
     // Cinerinoでの予約検索

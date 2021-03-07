@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 予約検索の購入アカウント条件をbrokerの検索条件に割り当てるように変更
+
 ### Deprecated
 
 ### Removed
