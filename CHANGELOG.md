@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v7.0.1 - 2021-03-07
+
+### Changed
+
+- 予約検索の購入アカウント条件をbrokerの検索条件に割り当てるように変更
+
 ## v7.0.0 - 2021-02-03
 
 ### Changed

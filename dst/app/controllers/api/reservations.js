@@ -130,22 +130,15 @@ function search(req, res) {
                 break;
             default:
         }
-        const searchConditions = {
-            limit: limit,
-            page: page,
-            sort: {
+        const searchConditions = Object.assign({ limit: limit, page: page, sort: {
                 'reservationFor.startDate': 1,
                 reservationNumber: 1,
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
-            },
-            typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-            reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
-            reservationFor: {
+            }, typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation, reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed], reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
-            },
-            underName: {
+            }, underName: {
                 familyName: (purchaserLastName !== null)
                     ? { $regex: purchaserLastName, $options: 'i' }
                     : undefined,
@@ -157,7 +150,7 @@ function search(req, res) {
                     : undefined,
                 telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
                 identifier: Object.assign({ $all: [
-                        ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
+                        // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                         ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                     ], $in: [
                         ...clientIds.map((id) => {
@@ -168,11 +161,18 @@ function search(req, res) {
                         ? { name: 'paymentNo', value: { $regex: toHalfWidth(paymentNo.replace(/\s/g, '')) } }
                         : undefined
                 })
-            },
-            additionalTicketText: (watcherName !== null)
+            }, additionalTicketText: (watcherName !== null)
                 ? { $regex: watcherName, $options: 'i' }
-                : undefined
-        };
+                : undefined }, {
+            // brokerのusernameで検索
+            broker: {
+                identifier: {
+                    $all: [
+                        ...(owner !== null) ? [{ name: 'username', value: owner }] : []
+                    ]
+                }
+            }
+        });
         // Cinerinoでの予約検索
         debug('searching reservations...', searchConditions);
         const reservationService = new cinerinoapi.service.Reservation({
