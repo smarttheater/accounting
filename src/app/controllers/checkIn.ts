@@ -12,6 +12,10 @@ import * as moment from 'moment-timezone';
 import { chevreReservation2ttts, ICheckin, IReservation } from '../util/reservation';
 
 const CODE_EXPIRES_IN_SECONDS = 60; // その場で使用するだけなので短くてよし
+const USE_NEW_ATTEND_FROM = (typeof process.env.USE_NEW_ATTEND_FROM === 'string')
+    ? moment(process.env.USE_NEW_ATTEND_FROM)
+        .toDate()
+    : undefined;
 
 /**
  * QRコード認証画面
@@ -21,12 +25,22 @@ export async function confirm(req: Request, res: Response, next: NextFunction): 
         next(new Error('unexepected error'));
     }
     try {
-        res.render('checkIn/confirm', {
-            checkinAdminUser: req.staffUser,
-            layout: 'layouts/checkIn/layout',
-            pageId: 'page_checkin_confirm',
-            pageClassName: 'page-checkin page-confirm'
-        });
+        const now = moment();
+
+        // 新入場アプリ使用日時の指定があれば、アナウンスを表示
+        const useNewAttend = USE_NEW_ATTEND_FROM instanceof Date
+            && moment(USE_NEW_ATTEND_FROM)
+                .isSameOrBefore(now);
+        if (useNewAttend) {
+            res.send('Smart Theater入場端末をご利用ください。');
+        } else {
+            res.render('checkIn/confirm', {
+                checkinAdminUser: req.staffUser,
+                layout: 'layouts/checkIn/layout',
+                pageId: 'page_checkin_confirm',
+                pageClassName: 'page-checkin page-confirm'
+            });
+        }
     } catch (error) {
         next(new Error('unexepected error'));
     }

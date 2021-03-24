@@ -21,6 +21,10 @@ const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
 const reservation_1 = require("../util/reservation");
 const CODE_EXPIRES_IN_SECONDS = 60; // その場で使用するだけなので短くてよし
+const USE_NEW_ATTEND_FROM = (typeof process.env.USE_NEW_ATTEND_FROM === 'string')
+    ? moment(process.env.USE_NEW_ATTEND_FROM)
+        .toDate()
+    : undefined;
 /**
  * QRコード認証画面
  */
@@ -30,12 +34,22 @@ function confirm(req, res, next) {
             next(new Error('unexepected error'));
         }
         try {
-            res.render('checkIn/confirm', {
-                checkinAdminUser: req.staffUser,
-                layout: 'layouts/checkIn/layout',
-                pageId: 'page_checkin_confirm',
-                pageClassName: 'page-checkin page-confirm'
-            });
+            const now = moment();
+            // 新入場アプリ使用日時の指定があれば、アナウンスを表示
+            const useNewAttend = USE_NEW_ATTEND_FROM instanceof Date
+                && moment(USE_NEW_ATTEND_FROM)
+                    .isSameOrBefore(now);
+            if (useNewAttend) {
+                res.send('Smart Theater入場端末をご利用ください。');
+            }
+            else {
+                res.render('checkIn/confirm', {
+                    checkinAdminUser: req.staffUser,
+                    layout: 'layouts/checkIn/layout',
+                    pageId: 'page_checkin_confirm',
+                    pageClassName: 'page-checkin page-confirm'
+                });
+            }
         }
         catch (error) {
             next(new Error('unexepected error'));

@@ -19,7 +19,6 @@ const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
 const mypage_1 = require("../staff/mypage");
 const debug = createDebug('@smarttheater/accounting:controllers');
-// const USE_CINERINO_SEARCH_RESERVATION = process.env.USE_CINERINO_SEARCH_RESERVATION === '1';
 const FRONTEND_CLIENT_IDS = (typeof process.env.FRONTEND_CLIENT_ID === 'string')
     ? process.env.FRONTEND_CLIENT_ID.split(',')
     : [];
