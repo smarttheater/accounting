@@ -40,7 +40,7 @@ function confirm(req, res, next) {
                 && moment(USE_NEW_ATTEND_FROM)
                     .isSameOrBefore(now);
             if (useNewAttend) {
-                res.send('Smart Theater入場端末をご利用ください。');
+                res.send('Smart Theater入場アプリケーションをご利用ください。');
             }
             else {
                 res.render('checkIn/confirm', {
