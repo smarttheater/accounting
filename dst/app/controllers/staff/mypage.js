@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.printByToken = exports.getPrintToken = exports.print = exports.searchTicketClerks = exports.index = exports.PAYMENT_METHODS = exports.createPrintToken = void 0;
+exports.printByToken = exports.getPrintToken = exports.print = exports.searchPaymentMethodTypes = exports.searchTicketClerks = exports.index = exports.createPrintToken = void 0;
 /**
  * マイページコントローラー
  */
@@ -47,26 +47,16 @@ function createPrintToken(object, orders) {
     });
 }
 exports.createPrintToken = createPrintToken;
-exports.PAYMENT_METHODS = {
-    CreditCard: 'クレジットカード',
-    CP: '団体（CP支払い）',
-    Invoice: '団体（納品書・請求書支払い）',
-    GroupReservation: '団体（現金支払い）',
-    Charter: '事前ブロック、貸切',
-    OTC: 'トップデッキのみ（手売り）',
-    Invitation: '無料招待、振替等対応'
-};
 /**
  * マイページ(予約一覧)
  */
 function index(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const owners = yield searchTicketClerks(req);
             res.render('staff/mypage/index', {
-                owners: owners,
                 layout: layout,
-                paymentMethods: exports.PAYMENT_METHODS
+                owners: yield searchTicketClerks(req),
+                paymentMethods: yield searchPaymentMethodTypes(req)
             });
         }
         catch (error) {
@@ -104,6 +94,45 @@ function searchTicketClerks(req) {
     });
 }
 exports.searchTicketClerks = searchTicketClerks;
+function searchPaymentMethodTypes(req) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const categoryCodeService = new cinerinoapi.service.CategoryCode({
+            endpoint: process.env.CINERINO_API_ENDPOINT,
+            auth: req.tttsAuthClient,
+            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+        });
+        const searchMembersResult = yield categoryCodeService.search({
+            limit: 100,
+            inCodeSet: { identifier: { $eq: cinerinoapi.factory.chevre.categoryCode.CategorySetIdentifier.PaymentMethodType } }
+        });
+        const paymentMethods = {};
+        searchMembersResult.data
+            .sort((a, b) => {
+            var _a, _b, _c, _d;
+            let priority4a = 99999;
+            let priority4b = 99999;
+            const priorityValue4a = (_b = (_a = a.additionalProperty) === null || _a === void 0 ? void 0 : _a.find((p) => p.name === 'priority')) === null || _b === void 0 ? void 0 : _b.value;
+            const priorityValue4b = (_d = (_c = b.additionalProperty) === null || _c === void 0 ? void 0 : _c.find((p) => p.name === 'priority')) === null || _d === void 0 ? void 0 : _d.value;
+            if (typeof priorityValue4a === 'string') {
+                priority4a = Number(priorityValue4a);
+            }
+            if (typeof priorityValue4b === 'string') {
+                priority4b = Number(priorityValue4b);
+            }
+            return priority4a - priority4b;
+        })
+            .forEach((categoryCode) => {
+            var _a;
+            const name = (typeof categoryCode.name === 'string')
+                ? categoryCode.name
+                : (typeof ((_a = categoryCode.name) === null || _a === void 0 ? void 0 : _a.ja) === 'string') ? categoryCode.name.ja : 'unknown';
+            paymentMethods[categoryCode.codeValue] = name;
+        });
+        return paymentMethods;
+    });
+}
+exports.searchPaymentMethodTypes = searchPaymentMethodTypes;
 /**
  * A4印刷
  */

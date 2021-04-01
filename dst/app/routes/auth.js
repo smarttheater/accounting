@@ -37,9 +37,9 @@ authRouter.get('/signIn', (req, res, next) => __awaiter(void 0, void 0, void 0, 
             throw new Error('cannot get profile from id_token');
         }
         // const profile = <IProfile>jwt.decode((<any>authClient.credentials).id_token);
-        const group = (Array.isArray(profile['cognito:groups']) && profile['cognito:groups'].length > 0)
-            ? { name: profile['cognito:groups'][0], description: '' }
-            : { name: '', description: '' };
+        // const group = (Array.isArray(((<any>profile))['cognito:groups']) && (<any>profile)['cognito:groups'].length > 0)
+        //     ? { name: (<any>profile)['cognito:groups'][0], description: '' }
+        //     : { name: '', description: '' };
         // ログイン
         req.session.staffUser = {
             sub: profile.sub,
@@ -47,8 +47,8 @@ authRouter.get('/signIn', (req, res, next) => __awaiter(void 0, void 0, void 0, 
             familyName: profile.family_name,
             givenName: profile.given_name,
             email: profile.email,
-            telephone: profile.phone_number,
-            group: group
+            telephone: profile.phone_number
+            // group: group
         };
         const redirect = (typeof req.query.state === 'string' && req.query.state.length > 0)
             ? req.query.state

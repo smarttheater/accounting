@@ -8,7 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 import { INTERNAL_SERVER_ERROR, NO_CONTENT } from 'http-status';
 import * as moment from 'moment-timezone';
 
-import { PAYMENT_METHODS } from '../staff/mypage';
+import { IPaymentMethods, searchPaymentMethodTypes } from '../staff/mypage';
 
 const debug = createDebug('@smarttheater/accounting:controllers');
 
@@ -26,19 +26,6 @@ const STAFF_CLIENT_IDS = [
 
 export interface ICheckin {
     when: Date; // いつ
-    where: string; // どこで
-    why: string; // 何のために
-    how: string; // どうやって
-    /**
-     * アクションID
-     */
-    id?: string;
-    instrument?: {
-        /**
-         * 入場に使用するトークン
-         */
-        token?: string;
-    };
 }
 
 export type IReservation
@@ -240,12 +227,13 @@ export async function search(req: Request, res: Response): Promise<void> {
         const message: string = (reservations.length === 0) ?
             '検索結果がありません。予約データが存在しないか、検索条件を見直してください' : '';
 
+        const paymentMethods = await searchPaymentMethodTypes(req);
+
         res.json({
-            results: addCustomAttributes(<any[]>reservations),
+            results: addCustomAttributes(<any[]>reservations, paymentMethods),
             count: count,
             errors: null,
-            message: message,
-            useCinerino: true
+            message: message
         });
     } catch (error) {
         res.status(INTERNAL_SERVER_ERROR).json({
@@ -256,7 +244,7 @@ export async function search(req: Request, res: Response): Promise<void> {
     }
 }
 
-function addCustomAttributes(reservations: IReservation[]): IReservation[] {
+function addCustomAttributes(reservations: IReservation[], paymentMethods: IPaymentMethods): IReservation[] {
     return reservations.map((reservation) => {
         // 決済手段名称追加
         let paymentMethod4reservation = '';
@@ -295,10 +283,10 @@ function addCustomAttributes(reservations: IReservation[]): IReservation[] {
             if (reservation.reservedTicket.dateUsed !== undefined && reservation.reservedTicket.dateUsed !== null) {
                 // 数が正であればよいので、中身は適当に
                 checkins = [{
-                    when: new Date(),
-                    where: '',
-                    why: '',
-                    how: ''
+                    when: new Date()
+                    // where: '',
+                    // why: '',
+                    // how: ''
                 }];
             }
         }
@@ -310,12 +298,12 @@ function addCustomAttributes(reservations: IReservation[]): IReservation[] {
             paymentNo: paymentNo,
             payment_method_name: (POS_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '---'
-                : paymentMethod2name(paymentMethod4reservation),
+                : paymentMethod2name(paymentMethod4reservation, paymentMethods),
             performance: reservation.reservationFor.id,
-            performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
-            performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
-            performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
-            performance_canceled: false,
+            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
+            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
+            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
+            // performance_canceled: false,
             ticket_type_name: reservation.reservedTicket.ticketType.name,
             transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'
@@ -339,9 +327,9 @@ function toHalfWidth(str: string): string {
     }).join('');
 }
 
-function paymentMethod2name(method: string) {
-    if (PAYMENT_METHODS.hasOwnProperty(method)) {
-        return PAYMENT_METHODS[method];
+function paymentMethod2name(method: string, paymentMethods: IPaymentMethods) {
+    if (typeof paymentMethods[method] === 'string') {
+        return paymentMethods[method];
     }
 
     return method;

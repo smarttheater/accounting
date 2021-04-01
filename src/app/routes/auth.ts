@@ -36,9 +36,9 @@ authRouter.get(
             }
 
             // const profile = <IProfile>jwt.decode((<any>authClient.credentials).id_token);
-            const group = (Array.isArray(((<any>profile))['cognito:groups']) && (<any>profile)['cognito:groups'].length > 0)
-                ? { name: (<any>profile)['cognito:groups'][0], description: '' }
-                : { name: '', description: '' };
+            // const group = (Array.isArray(((<any>profile))['cognito:groups']) && (<any>profile)['cognito:groups'].length > 0)
+            //     ? { name: (<any>profile)['cognito:groups'][0], description: '' }
+            //     : { name: '', description: '' };
 
             // ログイン
             (<Express.Session>req.session).staffUser = {
@@ -47,8 +47,8 @@ authRouter.get(
                 familyName: <string>profile.family_name,
                 givenName: <string>profile.given_name,
                 email: <string>profile.email,
-                telephone: <string>profile.phone_number,
-                group: group
+                telephone: <string>profile.phone_number
+                // group: group
             };
 
             const redirect = (typeof req.query.state === 'string' && req.query.state.length > 0)

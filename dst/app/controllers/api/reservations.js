@@ -192,12 +192,12 @@ function search(req, res) {
             // 0件メッセージセット
             const message = (reservations.length === 0) ?
                 '検索結果がありません。予約データが存在しないか、検索条件を見直してください' : '';
+            const paymentMethods = yield mypage_1.searchPaymentMethodTypes(req);
             res.json({
-                results: addCustomAttributes(reservations),
+                results: addCustomAttributes(reservations, paymentMethods),
                 count: count,
                 errors: null,
-                message: message,
-                useCinerino: true
+                message: message
             });
         }
         catch (error) {
@@ -210,7 +210,7 @@ function search(req, res) {
     });
 }
 exports.search = search;
-function addCustomAttributes(reservations) {
+function addCustomAttributes(reservations, paymentMethods) {
     return reservations.map((reservation) => {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         // 決済手段名称追加
@@ -246,16 +246,21 @@ function addCustomAttributes(reservations) {
             if (reservation.reservedTicket.dateUsed !== undefined && reservation.reservedTicket.dateUsed !== null) {
                 // 数が正であればよいので、中身は適当に
                 checkins = [{
-                        when: new Date(),
-                        where: '',
-                        why: '',
-                        how: ''
+                        when: new Date()
+                        // where: '',
+                        // why: '',
+                        // how: ''
                     }];
             }
         }
         return Object.assign(Object.assign({}, reservation), { checkins, orderNumber: orderNumber, paymentNo: paymentNo, payment_method_name: (POS_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '---'
-                : paymentMethod2name(paymentMethod4reservation), performance: reservation.reservationFor.id, performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'), performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'), performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'), performance_canceled: false, ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
+                : paymentMethod2name(paymentMethod4reservation, paymentMethods), performance: reservation.reservationFor.id, 
+            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
+            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
+            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
+            // performance_canceled: false,
+            ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'
                 : (POS_CLIENT_IDS.indexOf(clientId) >= 0) ? 'POS' : '一般ネット予約', purchaser_last_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.familyName) === 'string') ? underName.familyName : '', purchaser_first_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.givenName) === 'string') ? underName.givenName : '', purchaser_tel: (typeof (underName === null || underName === void 0 ? void 0 : underName.telephone) === 'string') ? underName.telephone : '', watcher_name: reservation.additionalTicketText });
     });
@@ -270,9 +275,9 @@ function toHalfWidth(str) {
         return value.replace(/[！-～]/g, String.fromCharCode(value.charCodeAt(0) - 0xFEE0)).replace('　', ' ');
     }).join('');
 }
-function paymentMethod2name(method) {
-    if (mypage_1.PAYMENT_METHODS.hasOwnProperty(method)) {
-        return mypage_1.PAYMENT_METHODS[method];
+function paymentMethod2name(method, paymentMethods) {
+    if (typeof paymentMethods[method] === 'string') {
+        return paymentMethods[method];
     }
     return method;
 }

@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 新入場切替日時設定を追加
+- 決済方法区分を動的に検索するように調整
 
 ### Deprecated
 

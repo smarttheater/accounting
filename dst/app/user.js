@@ -21,7 +21,7 @@ class User {
         user.state = state;
         // セッション値からオブジェクトにセット
         if (session !== undefined && session.staffUser !== undefined) {
-            user.group = session.staffUser.group;
+            // user.group = session.staffUser.group;
             user.familyName = session.staffUser.familyName;
             user.givenName = session.staffUser.givenName;
             user.email = session.staffUser.email;
