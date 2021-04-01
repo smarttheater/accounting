@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Removed
 
+- 入場機能を削除
+
 ### Fixed
 
 ### Security
