@@ -18,6 +18,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v7.1.0 - 2021-04-01
+
+### Changed
+
+- 決済方法区分を動的に検索するように調整
+
+### Removed
+
+- 入場機能を削除
+
 ## v7.0.1 - 2021-03-07
 
 ### Changed

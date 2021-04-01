@@ -13,14 +13,14 @@ declare global {
             };
         }
 
-        export interface IGroup {
-            name: string;
-            description: string;
-        }
+        // export interface IGroup {
+        //     name: string;
+        //     description: string;
+        // }
 
         interface IStaffUser {
             sub: string;
-            group: IGroup;
+            // group: IGroup;
             familyName: string;
             givenName: string;
             email: string;

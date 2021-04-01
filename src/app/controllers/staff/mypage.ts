@@ -49,27 +49,17 @@ export async function createPrintToken(
     });
 }
 
-export const PAYMENT_METHODS: { [key: string]: string } = {
-    CreditCard: 'クレジットカード',
-    CP: '団体（CP支払い）',
-    Invoice: '団体（納品書・請求書支払い）',
-    GroupReservation: '団体（現金支払い）',
-    Charter: '事前ブロック、貸切',
-    OTC: 'トップデッキのみ（手売り）',
-    Invitation: '無料招待、振替等対応'
-};
+export interface IPaymentMethods { [key: string]: string; }
 
 /**
  * マイページ(予約一覧)
  */
 export async function index(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const owners = await searchTicketClerks(req);
-
         res.render('staff/mypage/index', {
-            owners: owners,
             layout: layout,
-            paymentMethods: PAYMENT_METHODS
+            owners: await searchTicketClerks(req),
+            paymentMethods: await searchPaymentMethodTypes(req)
         });
     } catch (error) {
         next(error);
@@ -108,6 +98,44 @@ export async function searchTicketClerks(req: Request): Promise<ITicketClerk[]> 
                 givenName: ''
             };
         });
+}
+
+export async function searchPaymentMethodTypes(req: Request): Promise<IPaymentMethods> {
+    const categoryCodeService = new cinerinoapi.service.CategoryCode({
+        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        auth: req.tttsAuthClient,
+        project: { id: req.project?.id }
+    });
+    const searchMembersResult = await categoryCodeService.search({
+        limit: 100,
+        inCodeSet: { identifier: { $eq: cinerinoapi.factory.chevre.categoryCode.CategorySetIdentifier.PaymentMethodType } }
+    });
+
+    const paymentMethods: IPaymentMethods = {};
+    searchMembersResult.data
+        .sort((a, b) => {
+            let priority4a = 99999;
+            let priority4b = 99999;
+            const priorityValue4a = a.additionalProperty?.find((p) => p.name === 'priority')?.value;
+            const priorityValue4b = b.additionalProperty?.find((p) => p.name === 'priority')?.value;
+            if (typeof priorityValue4a === 'string') {
+                priority4a = Number(priorityValue4a);
+            }
+            if (typeof priorityValue4b === 'string') {
+                priority4b = Number(priorityValue4b);
+            }
+
+            return priority4a - priority4b;
+        })
+        .forEach((categoryCode) => {
+            const name: string = (typeof categoryCode.name === 'string')
+                ? categoryCode.name
+                : (typeof categoryCode.name?.ja === 'string') ? categoryCode.name.ja : 'unknown';
+
+            paymentMethods[categoryCode.codeValue] = name;
+        });
+
+    return paymentMethods;
 }
 
 /**
