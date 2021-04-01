@@ -7,7 +7,6 @@ import * as expressLayouts from 'express-ejs-layouts';
 import partials = require('express-partials');
 
 import apiRouter from './api';
-import checkinRouter from './checkin';
 import dashboardRouter from './dashboard';
 import projectsRouter from './projects';
 import reportsRouter from './reports';
@@ -42,9 +41,6 @@ router.use('/api', apiRouter);
 
 router.use('/staff', partials(), staffRouter);
 router.use('/reports', partials(), reportsRouter); //レポート出力
-
-// 入場
-router.use('/checkin', partials(), checkinRouter);
 
 // 以下新しいレイアウト
 router.use(expressLayouts);

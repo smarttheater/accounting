@@ -10,8 +10,6 @@ import * as moment from 'moment-timezone';
 
 import { PAYMENT_METHODS } from '../staff/mypage';
 
-import { ICheckin, IReservation } from '../../util/reservation';
-
 const debug = createDebug('@smarttheater/accounting:controllers');
 
 const FRONTEND_CLIENT_IDS = (typeof process.env.FRONTEND_CLIENT_ID === 'string')
@@ -25,6 +23,28 @@ const STAFF_CLIENT_IDS = [
     ...(typeof process.env.API_CLIENT_ID === 'string') ? [process.env.API_CLIENT_ID] : [],
     ...(typeof process.env.API_CLIENT_ID_OLD === 'string') ? [process.env.API_CLIENT_ID_OLD] : []
 ];
+
+export interface ICheckin {
+    when: Date; // いつ
+    where: string; // どこで
+    why: string; // 何のために
+    how: string; // どうやって
+    /**
+     * アクションID
+     */
+    id?: string;
+    instrument?: {
+        /**
+         * 入場に使用するトークン
+         */
+        token?: string;
+    };
+}
+
+export type IReservation
+    = cinerinoapi.factory.chevre.reservation.IReservation<cinerinoapi.factory.chevre.reservationType.EventReservation> & {
+        checkins: ICheckin[];
+    };
 
 /**
  * 予約検索
