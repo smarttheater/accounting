@@ -54,6 +54,16 @@ class User {
     generateLogoutUrl() {
         return this.authClient.generateLogoutUrl();
     }
+    generateLegacyLogoutUrl(redirect) {
+        const authClient = new cinerinoapi.auth.OAuth2({
+            domain: process.env.API_AUTHORIZE_SERVER_DOMAIN,
+            clientId: process.env.API_CLIENT_ID,
+            clientSecret: process.env.API_CLIENT_SECRET,
+            redirectUri: this.authClient.options.redirectUri,
+            logoutUri: `${this.authClient.options.logoutUri}?redirect=${redirect}`
+        });
+        return authClient.generateLogoutUrl();
+    }
     getRefreshToken() {
         var _a, _b;
         return (_b = (_a = this.session) === null || _a === void 0 ? void 0 : _a.cognitoCredentials) === null || _b === void 0 ? void 0 : _b.refreshToken;
