@@ -22,7 +22,7 @@ if (req.hasOwnProperty('route')) {
                     href="/staff/suspension/setting/performances"><span>オンライン<br>販売停止</span></a>
                 <% } %>
 
-                <a class="btn-logout" href="<%= req.staffUser.generateLogoutUrl() %>"><span>ログアウト</span></a>
+                <a class="btn-logout" href="<%= req.staffUser.generateLegacyLogoutUrl('/staff/mypage') %>"><span>ログアウト</span></a>
             </div>
 
         </div>

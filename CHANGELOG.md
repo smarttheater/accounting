@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v7.1.1 - 2021-04-02
+
+### Changed
+
+- レガシーページのログアウトURLを調整
+
 ## v7.1.0 - 2021-04-01
 
 ### Changed

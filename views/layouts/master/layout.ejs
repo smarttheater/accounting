@@ -50,7 +50,7 @@ let pageClassName = (routeName) ? `page-${routeName.replace(/\./g,' page-')}` : 
                     <%= req.staffUser.givenName %>
                 </p>
                 <p>
-                    <a class="btn-logout" href="<%= req.staffUser.generateLogoutUrl() %>">
+                    <a class="btn-logout" href="<%= req.staffUser.generateLegacyLogoutUrl('/reports') %>">
                         <span></span>
                     </a>
                 </p>
