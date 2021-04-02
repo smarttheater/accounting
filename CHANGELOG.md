@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- レガシーページのログアウトURLを調整
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v7.1.1 - 2021-04-02
+
+### Changed
+
+- レガシーページのログアウトURLを調整
 
 ## v7.1.0 - 2021-04-01
 
