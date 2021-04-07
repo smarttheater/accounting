@@ -49,30 +49,19 @@
                         <form role="form" method="get" class="search">
                             <div class="form-row">
                                 <div class="form-group col-md-2">
-                                    <label for="unwindAcceptedOffers" class="">
-                                    </label>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="unwindAcceptedOffers"
-                                            name="unwindAcceptedOffers" <% if (req.query.unwindAcceptedOffers==='on' ) {
-                                            %> checked<% } %>
-                                            <label class="form-check-label" for="unwindAcceptedOffers">注文アイテムを展開</label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group col-md-2">
-                                    <label for="paymentMethodId" class="">
-                                        決済方法ID
-                                    </label>
-                                    <input type="text" class="form-control form-control-sm" name="paymentMethodId"
-                                        id="paymentMethodId" value="<%= query.paymentMethodId%>">
-                                </div>
-
-                                <div class="form-group col-md-2">
                                     <label for="orderNumber" class="">
                                         注文番号
                                     </label>
                                     <input type="text" class="form-control form-control-sm" name="orderNumber"
                                         id="orderNumber" value="<%= query.orderNumber%>">
+                                </div>
+
+                                <div class="form-group col-md-2">
+                                    <label for="paymentMethodId" class="">
+                                        注文の決済方法ID
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" name="paymentMethodId"
+                                        id="paymentMethodId" value="<%= query.paymentMethodId%>">
                                 </div>
 
                                 <div class="form-group col-md-3">
@@ -91,6 +80,17 @@
                                         <div class="input-group-append">
                                             <span class="input-group-text">まで</span>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-md-2">
+                                    <label for="unwindAcceptedOffers" class="">
+                                    </label>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="unwindAcceptedOffers"
+                                            name="unwindAcceptedOffers" <% if (req.query.unwindAcceptedOffers==='on' ) {
+                                            %> checked<% } %>
+                                            <label class="form-check-label" for="unwindAcceptedOffers">注文アイテムを展開</label>
                                     </div>
                                 </div>
                             </div>

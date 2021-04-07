@@ -30,7 +30,12 @@ paymentReportsRouter.get('',
             page: req.query.page
         };
         if (req.query.format === 'datatable') {
-            const searchResult = yield paymentReportsService.search(Object.assign({ limit: Number(searchConditions.limit), page: Number(searchConditions.page) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined));
+            const conditions = Object.assign({ limit: Number(searchConditions.limit), page: Number(searchConditions.page), order: Object.assign(Object.assign({}, (typeof req.query.orderNumber === 'string' && req.query.orderNumber.length > 0)
+                    ? { orderNumber: { $eq: req.query.orderNumber } }
+                    : undefined), { paymentMethods: Object.assign({}, (typeof req.query.paymentMethodId === 'string' && req.query.paymentMethodId.length > 0)
+                        ? { paymentMethodId: { $eq: req.query.paymentMethodId } }
+                        : undefined) }) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined);
+            const searchResult = yield paymentReportsService.search(conditions);
             searchResult.data = searchResult.data.map((a) => {
                 var _a, _b, _c, _d, _e;
                 let clientId = '';
@@ -70,7 +75,7 @@ paymentReportsRouter.get('',
                             // ...(Array.isArray(a.order.customer.additionalProperty))
                             //     ? { additionalProperty: JSON.stringify(a.order.customer.additionalProperty) }
                             //     : undefined,
-                            clientId }), numItems: a.order.acceptedOffers.length }) });
+                            clientId }) }) });
             });
             res.json({
                 draw: req.query.draw,

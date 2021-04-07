@@ -24,11 +24,22 @@ paymentReportsRouter.get(
             };
 
             if (req.query.format === 'datatable') {
-                const searchResult = await paymentReportsService.search({
+                const conditions: any = {
                     limit: Number(searchConditions.limit),
                     page: Number(searchConditions.page),
+                    order: {
+                        ...(typeof req.query.orderNumber === 'string' && req.query.orderNumber.length > 0)
+                            ? { orderNumber: { $eq: req.query.orderNumber } }
+                            : undefined,
+                        paymentMethods: {
+                            ...(typeof req.query.paymentMethodId === 'string' && req.query.paymentMethodId.length > 0)
+                                ? { paymentMethodId: { $eq: req.query.paymentMethodId } }
+                                : undefined
+                        }
+                    },
                     ...(req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined
-                });
+                };
+                const searchResult = await paymentReportsService.search(conditions);
 
                 searchResult.data = searchResult.data.map((a) => {
                     let clientId = '';
@@ -77,8 +88,7 @@ paymentReportsRouter.get(
                                 //     ? { additionalProperty: JSON.stringify(a.order.customer.additionalProperty) }
                                 //     : undefined,
                                 clientId
-                            },
-                            numItems: a.order.acceptedOffers.length
+                            }
                         }
                     };
                 });
