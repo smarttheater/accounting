@@ -5,6 +5,7 @@ import * as cinerinoapi from '@cinerino/sdk';
 import * as express from 'express';
 
 import homeRouter from './home';
+import paymentReportsRouter from './paymentReports';
 import salesReportsRouter from './salesReports';
 
 const projectsRouter = express.Router();
@@ -43,6 +44,7 @@ projectsRouter.get(
 );
 
 projectsRouter.use('/:id/home', homeRouter);
+projectsRouter.use('/:id/paymentReports', paymentReportsRouter);
 projectsRouter.use('/:id/salesReports', salesReportsRouter);
 
 export default projectsRouter;

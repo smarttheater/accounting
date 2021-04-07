@@ -1,0 +1,200 @@
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">決済レポート検索</h1>
+            </div>
+            <!-- /.col -->
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item">
+                        <a href="/projects/<%= req.project.id %>/home">Home</a>
+                    </li>
+                    <li class="breadcrumb-item active">決済レポート検索</li>
+                </ol>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- left column -->
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-default">
+                    <div class="card-header">
+                        <!-- <h3 class="card-title">Quick Example</h3> -->
+                        <div class="toolbar">
+                            <!--        Here you can write extra buttons/actions for the toolbar              -->
+                            <a class="btn btn-default btn-sm search" href="#">
+                                <i class="fa fa-redo"></i>&nbsp;&nbsp;更新</a>
+                            <!-- <a class="btn btn-default btn-sm downloadCSV" href="#">
+                                <i class="fa fa-download"></i>&nbsp;&nbsp;CSV</a> -->
+                            <!-- <a class="btn btn-default btn-sm downloadJson" href="#">
+                                <i class="fa fa-download"></i>&nbsp;&nbsp;JSON</a> -->
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+
+                    <div class="card-body">
+                        <!-- form start -->
+                        <form role="form" method="get" class="search">
+                            <div class="form-row">
+                                <div class="form-group col-md-2">
+                                    <label for="unwindAcceptedOffers" class="">
+                                    </label>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="unwindAcceptedOffers"
+                                            name="unwindAcceptedOffers" <% if (req.query.unwindAcceptedOffers==='on' ) {
+                                            %> checked<% } %>
+                                            <label class="form-check-label" for="unwindAcceptedOffers">注文アイテムを展開</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-md-2">
+                                    <label for="paymentMethodId" class="">
+                                        決済方法ID
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" name="paymentMethodId"
+                                        id="paymentMethodId" value="<%= query.paymentMethodId%>">
+                                </div>
+
+                                <div class="form-group col-md-2">
+                                    <label for="orderNumber" class="">
+                                        注文番号
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" name="orderNumber"
+                                        id="orderNumber" value="<%= query.orderNumber%>">
+                                </div>
+
+                                <div class="form-group col-md-3">
+                                    <label for="dateFrom" class="">
+                                        計上期間選択
+                                    </label>
+
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm datepicker"
+                                            name="dateFrom" id="dateFrom" value="<%= query.dateFrom %>">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">から</span>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm datepicker" name="dateTo"
+                                            id="dateTo" value="<%= query.dateTo %>">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">まで</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table id="paymentReports-table" class="table table-sm table-hover dataTable">
+                                <thead>
+                                    <tr>
+                                        <th>タイプ</th>
+                                        <th>金額(JPY)</th>
+                                        <th>決済方法ID</th>
+                                        <th>決済方法区分コード</th>
+                                        <th>アイテム</th>
+                                        <th>計上日時(GMT)</th>
+                                        <th>予約イベント日時(GMT)</th>
+                                        <th>注文番号</th>
+                                        <th>注文日時</th>
+                                        <th>アイテム数</th>
+                                        <th>クライアント</th>
+                                        <th>識別子</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+
+            </div>
+            <!--/.col (left) -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+
+<div class="modal" id="modal-order" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-sm" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-createReport" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="reportName">レポート名称</label>
+                    <input class="form-control form-control-sm" type="text" name="reportName" placeholder="レポート名称">
+                </div>
+                <div class="form-group">
+                    <label for="recipientEmail">通知先メールアドレス</label>
+                    <input class="form-control form-control-sm" type="text" name="recipientEmail"
+                        placeholder="通知先メールアドレス">
+                </div>
+                <input type="hidden" name="format">
+                <input type="hidden" name="orderDateRange">
+                <input type="hidden" name="reservationForInSessionRange">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-primary submit" data-dismiss="modal">作成する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables -->
+<link rel="stylesheet" href="/node_modules/admin-lte/plugins/datatables-bs4/css/dataTables.bootstrap4.css">
+
+<script src="/js/paymentReports/index.js"></script>
