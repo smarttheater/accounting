@@ -37,17 +37,20 @@ paymentReportsRouter.get('',
                         : undefined) }) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined);
             const searchResult = yield paymentReportsService.search(conditions);
             searchResult.data = searchResult.data.map((a) => {
-                var _a, _b, _c, _d, _e;
+                var _a, _b, _c, _d, _e, _f;
                 let clientId = '';
                 if (Array.isArray(a.order.customer.identifier)) {
-                    const clientIdProperty = a.order.customer.identifier.find((p) => p.name === 'clientId');
-                    if (clientIdProperty !== undefined) {
-                        clientId = clientIdProperty.value;
+                    const clientIdPropertyValue = (_a = a.order.customer.identifier.find((p) => p.name === 'clientId')) === null || _a === void 0 ? void 0 : _a.value;
+                    if (typeof clientIdPropertyValue === 'string') {
+                        clientId = clientIdPropertyValue;
                     }
                 }
                 let itemType = '';
                 if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
                     itemType = a.order.acceptedOffers[0].itemOffered.typeOf;
+                    itemType += ` x ${a.order.acceptedOffers.length}`;
+                    // itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf)
+                    //     .join(',');
                 }
                 else if (a.order.acceptedOffers !== undefined && typeof a.order.acceptedOffers.typeOf === 'string') {
                     itemType = a.order.acceptedOffers.itemOffered.typeOf;
@@ -56,7 +59,7 @@ paymentReportsRouter.get('',
                     itemType = 'ReturnFee';
                 }
                 let amount;
-                if (typeof ((_c = (_b = (_a = a.object) === null || _a === void 0 ? void 0 : _a.paymentMethod) === null || _b === void 0 ? void 0 : _b.totalPaymentDue) === null || _c === void 0 ? void 0 : _c.value) === 'number') {
+                if (typeof ((_d = (_c = (_b = a.object) === null || _b === void 0 ? void 0 : _b.paymentMethod) === null || _c === void 0 ? void 0 : _c.totalPaymentDue) === null || _d === void 0 ? void 0 : _d.value) === 'number') {
                     amount = a.object.paymentMethod.totalPaymentDue.value;
                 }
                 let eventStartDates = [];
@@ -66,16 +69,12 @@ paymentReportsRouter.get('',
                         .map((o) => o.itemOffered.reservationFor.startDate);
                     eventStartDates = [...new Set(eventStartDates)];
                 }
-                else if (((_e = (_d = a.order.acceptedOffers) === null || _d === void 0 ? void 0 : _d.itemOffered) === null || _e === void 0 ? void 0 : _e.typeOf) === alvercaapi.factory.chevre.reservationType.EventReservation) {
+                else if (((_f = (_e = a.order.acceptedOffers) === null || _e === void 0 ? void 0 : _e.itemOffered) === null || _f === void 0 ? void 0 : _f.typeOf) === alvercaapi.factory.chevre.reservationType.EventReservation) {
                     eventStartDates = [a.order.acceptedOffers.itemOffered.reservationFor.startDate];
                 }
                 return Object.assign(Object.assign({}, a), { amount,
                     itemType,
-                    eventStartDates, order: Object.assign(Object.assign({}, a.order), { customer: Object.assign(Object.assign({}, a.order.customer), { 
-                            // ...(Array.isArray(a.order.customer.additionalProperty))
-                            //     ? { additionalProperty: JSON.stringify(a.order.customer.additionalProperty) }
-                            //     : undefined,
-                            clientId }) }) });
+                    eventStartDates, order: Object.assign(Object.assign({}, a.order), { customer: Object.assign(Object.assign({}, a.order.customer), { clientId }) }) });
             });
             res.json({
                 draw: req.query.draw,

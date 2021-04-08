@@ -35,8 +35,10 @@ $(function () {
                 data: null,
                 render: function (data, type, row) {
                     var html = '';
-                    if (typeof data.amount === 'number') {
-                        html += data.amount;
+                    if (typeof data.object !== undefined
+                        && data.object.paymentMethod !== undefined
+                        && data.object.paymentMethod.totalPaymentDue !== undefined) {
+                        html += data.object.paymentMethod.totalPaymentDue.value + '<br>' + data.object.paymentMethod.totalPaymentDue.currency;
                     }
 
                     return html;
@@ -63,17 +65,8 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.itemType;
-
-                    return html;
-
-                }
-            },
-            {
-                data: null,
-                render: function (data, type, row) {
                     var html = moment(data.startDate)
-                        // .tz('Asia/Tokyo')
+                        .tz('Asia/Tokyo')
                         .format('YYYY-MM-DD HH:mm:ssZ');
 
                     return html;
@@ -83,16 +76,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = '';
-                    if (Array.isArray(data.eventStartDates)) {
-                        html += data.eventStartDates.map((d) => {
-                            return moment(d)
-                                // .tz('Asia/Tokyo')
-                                .format('YYYY-MM-DD HH:mm:ssZ')
-                        })
-                            .join(',')
-
-                    }
+                    var html = data.itemType;
 
                     return html;
 
@@ -110,7 +94,7 @@ $(function () {
                 data: null,
                 render: function (data, type, row) {
                     var html = moment(data.order.orderDate)
-                        // .tz('Asia/Tokyo')
+                        .tz('Asia/Tokyo')
                         .format('YYYY-MM-DD HH:mm:ssZ');
 
                     return html;
@@ -130,15 +114,37 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.order.customer.clientId;
+                    var html = '';
+                    if (Array.isArray(data.eventStartDates)) {
+                        html += data.eventStartDates.map((d) => {
+                            return moment(d)
+                                .tz('Asia/Tokyo')
+                                .format('YYYY-MM-DD HH:mm:ssZ')
+                        })
+                            .join(',')
+
+                    }
 
                     return html;
+
                 }
             },
+            // {
+            //     data: null,
+            //     render: function (data, type, row) {
+            //         var html = data.order.customer.clientId;
+
+            //         return html;
+            //     }
+            // },
             {
                 data: null,
                 render: function (data, type, row) {
                     var html = '';
+
+                    if (Array.isArray(data.order.customer.identifier)) {
+                        html += '<a href="javascript:void(0)" class="showCustomerIdentifier" data-orderNumber="' + data.order.orderNumber + '">表示</a>';
+                    }
 
                     return html;
                 }
@@ -208,176 +214,27 @@ $(function () {
         createOrderReportTask();
     });
 
-    $(document).on('click', '.showIdentifier', function () {
-        showIdentifier($(this).data('ordernumber'));
-    });
     $(document).on('click', '.showCustomerIdentifier', function () {
         showCustomerIdentifier($(this).data('ordernumber'));
     });
-    $(document).on('click', '.showCustomerAdditionalProperty', function () {
-        showCustomerAdditionalProperty($(this).data('ordernumber'));
-    });
-    $(document).on('click', '.showCustomer', function () {
-        showCustomer($(this).data('ordernumber'));
-    });
-    $(document).on('click', '.showSeller', function () {
-        showSeller($(this).data('ordernumber'));
-    });
-    $(document).on('click', '.showPaymentMethods', function () {
-        showPaymentMethods($(this).data('ordernumber'));
-    });
-    $(document).on('click', '.showReturnerIdentifier', function () {
-        showReturnerIdentifier($(this).data('ordernumber'));
-    });
-    $(document).on('click', '.showReturner', function () {
-        showReturner($(this).data('ordernumber'));
-    });
-
-    function showIdentifier(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Identifier';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.identifier, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
 
     /**
      * 注文のCustomer Identifierを表示する
      */
     function showCustomerIdentifier(orderNumber) {
-        var orders = table
+        var actions = table
             .rows()
             .data()
             .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
+        var action = actions.find(function (action) {
+            return action.order.orderNumber === orderNumber
+        });
+        var order = action.order;
 
-        var modal = $('#modal-order');
+        var modal = $('#modal-action');
         var title = 'Order `' + order.orderNumber + '` Customer Identifier';
         var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
             + JSON.stringify(order.customer.identifier, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-
-    function showCustomerAdditionalProperty(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Customer AdditionalProperty';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.customer.additionalProperty, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-
-    function showCustomer(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Customer';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.customer, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-    function showSeller(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Seller';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.seller, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-    function showPaymentMethods(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Payment Methods';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.paymentMethods, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-    function showReturnerIdentifier(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Returner Identifier';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.returner.identifier, null, '\t')
-            + '</textarea>';
-        modal.find('.modal-title').html(title);
-        modal.find('.modal-body').html(body);
-        modal.modal();
-    }
-    function showReturner(orderNumber) {
-        var orders = table
-            .rows()
-            .data()
-            .toArray();
-        var order = orders.find(function (order) {
-            return order.orderNumber === orderNumber
-        })
-
-        var modal = $('#modal-order');
-        var title = 'Order `' + order.orderNumber + '` Returner';
-        var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
-            + JSON.stringify(order.returner, null, '\t')
             + '</textarea>';
         modal.find('.modal-title').html(title);
         modal.find('.modal-body').html(body);

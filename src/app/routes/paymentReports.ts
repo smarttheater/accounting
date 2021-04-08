@@ -2,8 +2,14 @@
  * 決済レポートルーター
  */
 import * as alvercaapi from '@alverca/sdk';
+import * as cinerinoapi from '@cinerino/sdk';
 import { Router } from 'express';
 import * as moment from 'moment-timezone';
+
+export type IAction = cinerinoapi.factory.chevre.action.trade.pay.IAction | cinerinoapi.factory.chevre.action.trade.refund.IAction;
+export type IPaymentReport = IAction & {
+    order: cinerinoapi.factory.order.IOrder;
+};
 
 const paymentReportsRouter = Router();
 
@@ -41,38 +47,42 @@ paymentReportsRouter.get(
                 };
                 const searchResult = await paymentReportsService.search(conditions);
 
-                searchResult.data = searchResult.data.map((a) => {
+                searchResult.data = (<IPaymentReport[]>searchResult.data).map((a) => {
                     let clientId = '';
                     if (Array.isArray(a.order.customer.identifier)) {
-                        const clientIdProperty = (<any[]>a.order.customer.identifier).find((p) => p.name === 'clientId');
-                        if (clientIdProperty !== undefined) {
-                            clientId = clientIdProperty.value;
+                        const clientIdPropertyValue = a.order.customer.identifier.find((p) => p.name === 'clientId')?.value;
+                        if (typeof clientIdPropertyValue === 'string') {
+                            clientId = clientIdPropertyValue;
                         }
                     }
 
-                    let itemType = '';
+                    let itemType: string = '';
                     if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
                         itemType = a.order.acceptedOffers[0].itemOffered.typeOf;
-                    } else if (a.order.acceptedOffers !== undefined && typeof a.order.acceptedOffers.typeOf === 'string') {
-                        itemType = a.order.acceptedOffers.itemOffered.typeOf;
+                        itemType += ` x ${a.order.acceptedOffers.length}`;
+                        // itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf)
+                        //     .join(',');
+                    } else if (a.order.acceptedOffers !== undefined && typeof (<any>a.order.acceptedOffers).typeOf === 'string') {
+                        itemType = (<any>a.order.acceptedOffers).itemOffered.typeOf;
                     }
                     if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
                         itemType = 'ReturnFee';
                     }
 
                     let amount;
-                    if (typeof a.object?.paymentMethod?.totalPaymentDue?.value === 'number') {
-                        amount = a.object.paymentMethod.totalPaymentDue.value;
+                    if (typeof (<any>a).object?.paymentMethod?.totalPaymentDue?.value === 'number') {
+                        amount = (<any>a).object.paymentMethod.totalPaymentDue.value;
                     }
 
                     let eventStartDates: any[] = [];
                     if (Array.isArray(a.order.acceptedOffers)) {
-                        eventStartDates = (<any[]>a.order.acceptedOffers)
+                        eventStartDates = a.order.acceptedOffers
                             .filter((o) => o.itemOffered.typeOf === alvercaapi.factory.chevre.reservationType.EventReservation)
-                            .map((o) => o.itemOffered.reservationFor.startDate);
+                            .map((o) => (<cinerinoapi.factory.order.IReservation>o.itemOffered).reservationFor.startDate);
                         eventStartDates = [...new Set(eventStartDates)];
-                    } else if (a.order.acceptedOffers?.itemOffered?.typeOf === alvercaapi.factory.chevre.reservationType.EventReservation) {
-                        eventStartDates = [a.order.acceptedOffers.itemOffered.reservationFor.startDate];
+                    } else if ((<any>a.order.acceptedOffers)?.itemOffered?.typeOf
+                        === alvercaapi.factory.chevre.reservationType.EventReservation) {
+                        eventStartDates = [(<any>a.order.acceptedOffers).itemOffered.reservationFor.startDate];
                     }
 
                     return {
@@ -84,9 +94,6 @@ paymentReportsRouter.get(
                             ...a.order,
                             customer: {
                                 ...a.order.customer,
-                                // ...(Array.isArray(a.order.customer.additionalProperty))
-                                //     ? { additionalProperty: JSON.stringify(a.order.customer.additionalProperty) }
-                                //     : undefined,
                                 clientId
                             }
                         }
