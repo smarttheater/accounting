@@ -84,17 +84,19 @@ paymentReportsRouter.get(
                         }
                     }
 
-                    let itemType: string = '';
+                    let itemType: string[] = [];
+                    let itemTypeStr: string = '';
                     if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
-                        itemType = a.order.acceptedOffers[0].itemOffered.typeOf;
-                        itemType += ` x ${a.order.acceptedOffers.length}`;
-                        // itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf)
-                        //     .join(',');
+                        itemTypeStr = a.order.acceptedOffers[0].itemOffered.typeOf;
+                        itemTypeStr += ` x ${a.order.acceptedOffers.length}`;
+                        itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf);
                     } else if (a.order.acceptedOffers !== undefined && typeof (<any>a.order.acceptedOffers).typeOf === 'string') {
-                        itemType = (<any>a.order.acceptedOffers).itemOffered.typeOf;
+                        itemType = [(<any>a.order.acceptedOffers).itemOffered.typeOf];
+                        itemTypeStr = (<any>a.order.acceptedOffers).itemOffered.typeOf;
                     }
                     if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
-                        itemType = 'ReturnFee';
+                        itemType = ['ReturnFee'];
+                        itemTypeStr = 'ReturnFee';
                     }
 
                     let amount;
@@ -117,6 +119,7 @@ paymentReportsRouter.get(
                         ...a,
                         amount,
                         itemType,
+                        itemTypeStr,
                         eventStartDates,
                         order: {
                             ...a.order,

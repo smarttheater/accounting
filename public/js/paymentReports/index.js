@@ -76,7 +76,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.itemType;
+                    var html = data.itemTypeStr;
 
                     return html;
 
@@ -180,17 +180,105 @@ $(function () {
         $(this).val('');
     });
 
-    $(document).on('click', '.downloadCSV', function () {
-        // ストリーミングの場合
-        // var url = '/projects/' + PROJECT_ID + '/orders?' + $('form').serialize() + '&format=text/csv';
-        // window.open(url, '_blank');
+    $(document).on('click', '.downloadCSV', async function () {
+        console.log('downloaing...');
+        // this.utilService.loadStart({ process: 'load' });
+        $(document).Toasts('create', {
+            title: 'レポートダウンロードを開始します...',
+            // body: 'Downloading reports...',
+            autohide: true,
+            delay: 2000,
+            close: false
+        });
 
-        // レポート作成タスク追加
-        var conditions = $('form.search').serializeArray();
-        openCreateReportForm(conditions, 'text/csv');
+        const actions = [];
+        const limit = 100;
+        let page = 0;
+        while (true) {
+            page += 1;
+            console.log('searching actions...', limit, page);
+            $(document).Toasts('create', {
+                icon: 'fa fa-spinner',
+                title: page + 'ページ目を検索しています...',
+                // body: 'searching reports...page:' + page,
+                autohide: true,
+                delay: 2000,
+                close: false
+            });
+            const searchResult = await new Promise((resolve, reject) => {
+                // 全ページ検索する
+                $.ajax({
+                    url: '?' + $('form').serialize(),
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        limit,
+                        page,
+                        format: 'datatable'
+                    }
+                }).done(function (result) {
+                    console.log('searched.', result);
+                    resolve(result);
+                }).fail(function (xhr) {
+                    reject();
+                    // var res = $.parseJSON(xhr.responseText);
+                    // alert(res.error.message);
+                }).always(function () {
+                    // this.utilService.loadEnd();
+                });
+            });
+
+            if (Array.isArray(searchResult.data)) {
+                actions.push(...searchResult.data);
+            }
+
+            if (searchResult.data.length < limit) {
+                break;
+            }
+        }
+
+        console.log(actions.length, 'actions found');
+        $(document).Toasts('create', {
+            title: actions.length + '件のレポートが見つかりました',
+            // body: 'Downloading reports...',
+            autohide: true,
+            delay: 2000,
+            close: false
+        });
+
+        const fields = [
+            { label: 'アクションタイプ', default: '', value: 'typeOf' },
+            { label: '金額', default: '', value: 'object.paymentMethod.totalPaymentDue.value' },
+            { label: '通貨', default: '', value: 'object.paymentMethod.totalPaymentDue.currency' },
+            { label: '決済方法ID', default: '', value: 'object.paymentMethod.paymentMethodId' },
+            { label: '決済方法区分', default: '', value: 'object.paymentMethod.typeOf' },
+            { label: '処理日時', default: '', value: 'startDate' },
+            { label: 'アイテム', default: '', value: 'itemType' },
+            { label: '注文番号', default: '', value: 'order.orderNumber' },
+            { label: '注文日時', default: '', value: 'order.orderDate' },
+            { label: 'アイテム数', default: '', value: 'order.numItems' },
+            { label: '予約イベント日時', default: '', value: 'eventStartDates' },
+            { label: 'クライアント', default: '', value: 'order.customer.clientId' },
+            { label: 'カスタマー識別子', default: '', value: 'order.customer.identifier' },
+        ];
+        const opts = {
+            fields: fields,
+            delimiter: ',',
+            eol: '\n',
+            // flatten: true,
+            // preserveNewLinesInValues: true,
+            // unwind: 'acceptedOffers'
+        };
+
+        const parser = new json2csv.Parser(opts);
+        var csv = parser.parse(actions);
+        const blob = string2blob(csv, { type: 'text/csv' });
+        const fileName = 'paymentReports.csv';
+        download(blob, fileName);
 
         return false;
     });
+
     $(document).on('click', '.downloadJson', function () {
         // ストリーミングの場合
         // var url = '/projects/' + PROJECT_ID + '/orders?' + $('form').serialize() + '&format=application/json';
@@ -297,4 +385,23 @@ function createOrderReportTask() {
         alert(res.error.message);
     }).always(function () {
     });
+}
+/**
+ * 文字列をBLOB変換
+ */
+function string2blob(value, options) {
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    return new Blob([bom, value], options);
+}
+
+function download(blob, fileName) {
+    if (window.navigator.msSaveBlob) {
+        window.navigator.msSaveBlob(blob, fileName);
+        window.navigator.msSaveOrOpenBlob(blob, fileName);
+    } else {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+    }
 }

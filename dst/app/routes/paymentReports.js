@@ -71,18 +71,20 @@ paymentReportsRouter.get('',
                         clientId = clientIdPropertyValue;
                     }
                 }
-                let itemType = '';
+                let itemType = [];
+                let itemTypeStr = '';
                 if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
-                    itemType = a.order.acceptedOffers[0].itemOffered.typeOf;
-                    itemType += ` x ${a.order.acceptedOffers.length}`;
-                    // itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf)
-                    //     .join(',');
+                    itemTypeStr = a.order.acceptedOffers[0].itemOffered.typeOf;
+                    itemTypeStr += ` x ${a.order.acceptedOffers.length}`;
+                    itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf);
                 }
                 else if (a.order.acceptedOffers !== undefined && typeof a.order.acceptedOffers.typeOf === 'string') {
-                    itemType = a.order.acceptedOffers.itemOffered.typeOf;
+                    itemType = [a.order.acceptedOffers.itemOffered.typeOf];
+                    itemTypeStr = a.order.acceptedOffers.itemOffered.typeOf;
                 }
                 if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
-                    itemType = 'ReturnFee';
+                    itemType = ['ReturnFee'];
+                    itemTypeStr = 'ReturnFee';
                 }
                 let amount;
                 if (typeof ((_d = (_c = (_b = a.object) === null || _b === void 0 ? void 0 : _b.paymentMethod) === null || _c === void 0 ? void 0 : _c.totalPaymentDue) === null || _d === void 0 ? void 0 : _d.value) === 'number') {
@@ -100,6 +102,7 @@ paymentReportsRouter.get('',
                 }
                 return Object.assign(Object.assign({}, a), { amount,
                     itemType,
+                    itemTypeStr,
                     eventStartDates, order: Object.assign(Object.assign({}, a.order), { customer: Object.assign(Object.assign({}, a.order.customer), { clientId }) }) });
             });
             res.json({
