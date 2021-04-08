@@ -41,6 +41,34 @@ paymentReportsRouter.get(
                             ...(typeof req.query.paymentMethodId === 'string' && req.query.paymentMethodId.length > 0)
                                 ? { paymentMethodId: { $eq: req.query.paymentMethodId } }
                                 : undefined
+                        },
+                        orderDate: {
+                            $gte: (typeof req.query.orderDateRange === 'string' && req.query.orderDateRange.length > 0)
+                                ? moment(req.query.orderDateRange.split(' - ')[0])
+                                    .toDate()
+                                : undefined,
+                            $lte: (typeof req.query.orderDateRange === 'string' && req.query.orderDateRange.length > 0)
+                                ? moment(req.query.orderDateRange.split(' - ')[1])
+                                    .toDate()
+                                : undefined
+                        },
+                        acceptedOffers: {
+                            itemOffered: {
+                                reservationFor: {
+                                    startDate: {
+                                        $gte: (typeof req.query.reservationForStartRange === 'string'
+                                            && req.query.reservationForStartRange.length > 0)
+                                            ? moment(req.query.reservationForStartRange.split(' - ')[0])
+                                                .toDate()
+                                            : undefined,
+                                        $lte: (typeof req.query.reservationForStartRange === 'string'
+                                            && req.query.reservationForStartRange.length > 0)
+                                            ? moment(req.query.reservationForStartRange.split(' - ')[1])
+                                                .toDate()
+                                            : undefined
+                                    }
+                                }
+                            }
                         }
                     },
                     ...(req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined

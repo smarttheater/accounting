@@ -34,7 +34,33 @@ paymentReportsRouter.get('',
                     ? { orderNumber: { $eq: req.query.orderNumber } }
                     : undefined), { paymentMethods: Object.assign({}, (typeof req.query.paymentMethodId === 'string' && req.query.paymentMethodId.length > 0)
                         ? { paymentMethodId: { $eq: req.query.paymentMethodId } }
-                        : undefined) }) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined);
+                        : undefined), orderDate: {
+                        $gte: (typeof req.query.orderDateRange === 'string' && req.query.orderDateRange.length > 0)
+                            ? moment(req.query.orderDateRange.split(' - ')[0])
+                                .toDate()
+                            : undefined,
+                        $lte: (typeof req.query.orderDateRange === 'string' && req.query.orderDateRange.length > 0)
+                            ? moment(req.query.orderDateRange.split(' - ')[1])
+                                .toDate()
+                            : undefined
+                    }, acceptedOffers: {
+                        itemOffered: {
+                            reservationFor: {
+                                startDate: {
+                                    $gte: (typeof req.query.reservationForStartRange === 'string'
+                                        && req.query.reservationForStartRange.length > 0)
+                                        ? moment(req.query.reservationForStartRange.split(' - ')[0])
+                                            .toDate()
+                                        : undefined,
+                                    $lte: (typeof req.query.reservationForStartRange === 'string'
+                                        && req.query.reservationForStartRange.length > 0)
+                                        ? moment(req.query.reservationForStartRange.split(' - ')[1])
+                                            .toDate()
+                                        : undefined
+                                }
+                            }
+                        }
+                    } }) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined);
             const searchResult = yield paymentReportsService.search(conditions);
             searchResult.data = searchResult.data.map((a) => {
                 var _a, _b, _c, _d, _e, _f;

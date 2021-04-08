@@ -64,23 +64,35 @@
                                         id="paymentMethodId" value="<%= query.paymentMethodId%>">
                                 </div>
 
-                                <div class="form-group col-md-3">
-                                    <label for="dateFrom" class="">
-                                        計上期間選択
-                                    </label>
+                                <div class="form-group col-md-2">
+                                    <label>注文日時</label>
 
-                                    <div class="input-group input-group-sm">
-                                        <input type="text" class="form-control form-control-sm datepicker"
-                                            name="dateFrom" id="dateFrom" value="<%= query.dateFrom %>">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">から</span>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fa fa-calendar"></i>
+                                            </span>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm datepicker" name="dateTo"
-                                            id="dateTo" value="<%= query.dateTo %>">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">まで</span>
-                                        </div>
+                                        <input type="text" class="form-control form-control-sm" name="orderDateRange"
+                                            id="orderDateRange" value="<%= query.orderDateRange%>">
                                     </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                <div class="form-group col-md-2">
+                                    <label>予約イベント開始日時</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fa fa-calendar"></i>
+                                            </span>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm"
+                                            name="reservationForStartRange" id="reservationForStartRange"
+                                            value="<%= query.reservationForStartRange%>">
+                                    </div>
+                                    <!-- /.input group -->
                                 </div>
 
                                 <div class="form-group col-md-2">
