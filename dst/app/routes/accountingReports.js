@@ -79,9 +79,9 @@ accountingReportsRouter.get('',
                     itemTypeStr += ` x ${order.acceptedOffers.length}`;
                     itemType = order.acceptedOffers.map((o) => o.itemOffered.typeOf);
                 }
-                else if (order.acceptedOffers !== undefined && typeof order.typeOf === 'string') {
-                    itemType = [order.itemOffered.typeOf];
-                    itemTypeStr = order.itemOffered.typeOf;
+                else if (!Array.isArray(order.acceptedOffers) && typeof order.acceptedOffers.typeOf === 'string') {
+                    itemType = [order.acceptedOffers.itemOffered.typeOf];
+                    itemTypeStr = order.acceptedOffers.itemOffered.typeOf;
                 }
                 if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
                     itemType = ['ReturnFee'];
