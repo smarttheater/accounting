@@ -1,5 +1,5 @@
 /**
- * 決済レポートルーター
+ * 経理レポートルーター
  */
 import * as alvercaapi from '@alverca/sdk';
 import * as cinerinoapi from '@cinerino/sdk';
@@ -8,17 +8,19 @@ import * as moment from 'moment-timezone';
 
 export type IAction = cinerinoapi.factory.chevre.action.trade.pay.IAction | cinerinoapi.factory.chevre.action.trade.refund.IAction;
 export type IPaymentReport = IAction & {
-    order: cinerinoapi.factory.order.IOrder;
+    isPartOf: {
+        mainEntity: cinerinoapi.factory.order.IOrder;
+    };
 };
 
-const paymentReportsRouter = Router();
+const accountingReportsRouter = Router();
 
-paymentReportsRouter.get(
+accountingReportsRouter.get(
     '',
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     async (req, res, next) => {
         try {
-            const paymentReportsService = new alvercaapi.service.PaymentReport({
+            const accountingReportService = new alvercaapi.service.AccountingReport({
                 endpoint: <string>process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: req.project
@@ -73,12 +75,14 @@ paymentReportsRouter.get(
                     },
                     ...(req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined
                 };
-                const searchResult = await paymentReportsService.search(conditions);
+                const searchResult = await accountingReportService.search(conditions);
 
                 searchResult.data = (<IPaymentReport[]>searchResult.data).map((a) => {
+                    const order = a.isPartOf.mainEntity;
+
                     let clientId = '';
-                    if (Array.isArray(a.order.customer.identifier)) {
-                        const clientIdPropertyValue = a.order.customer.identifier.find((p) => p.name === 'clientId')?.value;
+                    if (Array.isArray(order.customer.identifier)) {
+                        const clientIdPropertyValue = order.customer.identifier.find((p) => p.name === 'clientId')?.value;
                         if (typeof clientIdPropertyValue === 'string') {
                             clientId = clientIdPropertyValue;
                         }
@@ -86,13 +90,13 @@ paymentReportsRouter.get(
 
                     let itemType: string[] = [];
                     let itemTypeStr: string = '';
-                    if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
-                        itemTypeStr = a.order.acceptedOffers[0].itemOffered.typeOf;
-                        itemTypeStr += ` x ${a.order.acceptedOffers.length}`;
-                        itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf);
-                    } else if (a.order.acceptedOffers !== undefined && typeof (<any>a.order.acceptedOffers).typeOf === 'string') {
-                        itemType = [(<any>a.order.acceptedOffers).itemOffered.typeOf];
-                        itemTypeStr = (<any>a.order.acceptedOffers).itemOffered.typeOf;
+                    if (Array.isArray(order.acceptedOffers) && order.acceptedOffers.length > 0) {
+                        itemTypeStr = order.acceptedOffers[0].itemOffered.typeOf;
+                        itemTypeStr += ` x ${order.acceptedOffers.length}`;
+                        itemType = order.acceptedOffers.map((o) => o.itemOffered.typeOf);
+                    } else if (order.acceptedOffers !== undefined && typeof (<any>order).typeOf === 'string') {
+                        itemType = [(<any>order).itemOffered.typeOf];
+                        itemTypeStr = (<any>order).itemOffered.typeOf;
                     }
                     if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
                         itemType = ['ReturnFee'];
@@ -105,14 +109,14 @@ paymentReportsRouter.get(
                     }
 
                     let eventStartDates: any[] = [];
-                    if (Array.isArray(a.order.acceptedOffers)) {
-                        eventStartDates = a.order.acceptedOffers
+                    if (Array.isArray(order.acceptedOffers)) {
+                        eventStartDates = order.acceptedOffers
                             .filter((o) => o.itemOffered.typeOf === alvercaapi.factory.chevre.reservationType.EventReservation)
                             .map((o) => (<cinerinoapi.factory.order.IReservation>o.itemOffered).reservationFor.startDate);
                         eventStartDates = [...new Set(eventStartDates)];
-                    } else if ((<any>a.order.acceptedOffers)?.itemOffered?.typeOf
+                    } else if ((<any>order.acceptedOffers)?.itemOffered?.typeOf
                         === alvercaapi.factory.chevre.reservationType.EventReservation) {
-                        eventStartDates = [(<any>a.order.acceptedOffers).itemOffered.reservationFor.startDate];
+                        eventStartDates = [(<any>order.acceptedOffers).itemOffered.reservationFor.startDate];
                     }
 
                     return {
@@ -121,13 +125,7 @@ paymentReportsRouter.get(
                         itemType,
                         itemTypeStr,
                         eventStartDates,
-                        order: {
-                            ...a.order,
-                            customer: {
-                                ...a.order.customer,
-                                clientId
-                            }
-                        }
+                        clientId
                     };
                 });
 
@@ -162,7 +160,7 @@ paymentReportsRouter.get(
                 //     res.setHeader('Content-Type', `${cinerinoapi.factory.chevre.encodingFormat.Application.json}; charset=UTF-8`);
                 //     stream.pipe(res);
             } else {
-                res.render('paymentReports/index', {
+                res.render('accountingReports/index', {
                     moment: moment,
                     query: req.query,
                     searchConditions: searchConditions,
@@ -175,4 +173,4 @@ paymentReportsRouter.get(
     }
 );
 
-export default paymentReportsRouter;
+export default accountingReportsRouter;

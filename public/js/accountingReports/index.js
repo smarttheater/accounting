@@ -1,5 +1,5 @@
 $(function () {
-    var table = $("#paymentReports-table").DataTable({
+    var table = $("#accountingReports-table").DataTable({
         processing: true,
         serverSide: true,
         pagingType: 'simple',
@@ -25,7 +25,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.typeOf;
+                    var html = data.mainEntity.typeOf;
 
                     return html;
 
@@ -35,10 +35,10 @@ $(function () {
                 data: null,
                 render: function (data, type, row) {
                     var html = '';
-                    if (typeof data.object !== undefined
-                        && data.object.paymentMethod !== undefined
-                        && data.object.paymentMethod.totalPaymentDue !== undefined) {
-                        html += data.object.paymentMethod.totalPaymentDue.value + '<br>' + data.object.paymentMethod.totalPaymentDue.currency;
+                    if (typeof data.mainEntity.object !== undefined
+                        && data.mainEntity.object[0].paymentMethod !== undefined
+                        && data.mainEntity.object[0].paymentMethod.totalPaymentDue !== undefined) {
+                        html += data.mainEntity.object[0].paymentMethod.totalPaymentDue.value + '<br>' + data.mainEntity.object[0].paymentMethod.totalPaymentDue.currency;
                     }
 
                     return html;
@@ -47,7 +47,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.object.paymentMethod.paymentMethodId;
+                    var html = data.mainEntity.object[0].paymentMethod.paymentMethodId;
 
                     return html;
 
@@ -56,7 +56,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.object.paymentMethod.typeOf;
+                    var html = data.mainEntity.object[0].paymentMethod.typeOf;
 
                     return html;
 
@@ -65,7 +65,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = moment(data.startDate)
+                    var html = moment(data.mainEntity.startDate)
                         .tz('Asia/Tokyo')
                         .format('YYYY-MM-DD HH:mm:ssZ');
 
@@ -85,7 +85,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = data.order.orderNumber;
+                    var html = data.isPartOf.mainEntity.orderNumber;
 
                     return html;
                 }
@@ -93,7 +93,7 @@ $(function () {
             {
                 data: null,
                 render: function (data, type, row) {
-                    var html = moment(data.order.orderDate)
+                    var html = moment(data.isPartOf.mainEntity.orderDate)
                         .tz('Asia/Tokyo')
                         .format('YYYY-MM-DD HH:mm:ssZ');
 
@@ -104,8 +104,8 @@ $(function () {
                 data: null,
                 render: function (data, type, row) {
                     var html = '';
-                    if (typeof data.order.numItems === 'number') {
-                        html += String(data.order.numItems);
+                    if (typeof data.isPartOf.mainEntity.numItems === 'number') {
+                        html += String(data.isPartOf.mainEntity.numItems);
                     }
 
                     return html;
@@ -132,7 +132,7 @@ $(function () {
             // {
             //     data: null,
             //     render: function (data, type, row) {
-            //         var html = data.order.customer.clientId;
+            //         var html = data.isPartOf.customer.clientId;
 
             //         return html;
             //     }
@@ -142,8 +142,8 @@ $(function () {
                 render: function (data, type, row) {
                     var html = '';
 
-                    if (Array.isArray(data.order.customer.identifier)) {
-                        html += '<a href="javascript:void(0)" class="showCustomerIdentifier" data-orderNumber="' + data.order.orderNumber + '">表示</a>';
+                    if (Array.isArray(data.isPartOf.mainEntity.customer.identifier)) {
+                        html += '<a href="javascript:void(0)" class="showCustomerIdentifier" data-orderNumber="' + data.isPartOf.mainEntity.orderNumber + '">表示</a>';
                     }
 
                     return html;
@@ -191,12 +191,12 @@ $(function () {
             close: false
         });
 
-        const actions = [];
+        const reports = [];
         const limit = 100;
         let page = 0;
         while (true) {
             page += 1;
-            console.log('searching actions...', limit, page);
+            console.log('searching reports...', limit, page);
             $(document).Toasts('create', {
                 icon: 'fa fa-spinner',
                 title: page + 'ページ目を検索しています...',
@@ -229,7 +229,7 @@ $(function () {
             });
 
             if (Array.isArray(searchResult.data)) {
-                actions.push(...searchResult.data);
+                reports.push(...searchResult.data);
             }
 
             if (searchResult.data.length < limit) {
@@ -237,9 +237,9 @@ $(function () {
             }
         }
 
-        console.log(actions.length, 'actions found');
+        console.log(reports.length, 'reports found');
         $(document).Toasts('create', {
-            title: actions.length + '件のレポートが見つかりました',
+            title: reports.length + '件のレポートが見つかりました',
             // body: 'Downloading reports...',
             autohide: true,
             delay: 2000,
@@ -247,19 +247,19 @@ $(function () {
         });
 
         const fields = [
-            { label: 'アクションタイプ', default: '', value: 'typeOf' },
-            { label: '金額', default: '', value: 'object.paymentMethod.totalPaymentDue.value' },
-            { label: '通貨', default: '', value: 'object.paymentMethod.totalPaymentDue.currency' },
-            { label: '決済方法ID', default: '', value: 'object.paymentMethod.paymentMethodId' },
-            { label: '決済方法区分', default: '', value: 'object.paymentMethod.typeOf' },
-            { label: '処理日時', default: '', value: 'startDate' },
+            { label: 'アクションタイプ', default: '', value: 'mainEntity.typeOf' },
+            { label: '金額', default: '', value: 'mainEntity.object.0.paymentMethod.totalPaymentDue.value' },
+            { label: '通貨', default: '', value: 'mainEntity.object.0.paymentMethod.totalPaymentDue.currency' },
+            { label: '決済方法ID', default: '', value: 'mainEntity.object.0.paymentMethod.paymentMethodId' },
+            { label: '決済方法区分', default: '', value: 'mainEntity.object.0.paymentMethod.typeOf' },
+            { label: '処理日時', default: '', value: 'mainEntity.startDate' },
             { label: 'アイテム', default: '', value: 'itemType' },
-            { label: '注文番号', default: '', value: 'order.orderNumber' },
-            { label: '注文日時', default: '', value: 'order.orderDate' },
-            { label: 'アイテム数', default: '', value: 'order.numItems' },
+            { label: '注文番号', default: '', value: 'isPartOf.mainEntity.orderNumber' },
+            { label: '注文日時', default: '', value: 'isPartOf.mainEntity.orderDate' },
+            { label: 'アイテム数', default: '', value: 'isPartOf.mainEntity.numItems' },
             { label: '予約イベント日時', default: '', value: 'eventStartDates' },
-            { label: 'クライアント', default: '', value: 'order.customer.clientId' },
-            { label: 'カスタマー識別子', default: '', value: 'order.customer.identifier' },
+            { label: 'アプリケーションクライアント', default: '', value: 'clientId' },
+            { label: 'カスタマー識別子', default: '', value: 'isPartOf.mainEntity.customer.identifier' },
         ];
         const opts = {
             fields: fields,
@@ -271,9 +271,9 @@ $(function () {
         };
 
         const parser = new json2csv.Parser(opts);
-        var csv = parser.parse(actions);
+        var csv = parser.parse(reports);
         const blob = string2blob(csv, { type: 'text/csv' });
-        const fileName = 'paymentReports.csv';
+        const fileName = 'accountingReports.csv';
         download(blob, fileName);
 
         return false;
@@ -303,16 +303,16 @@ $(function () {
      * 注文のCustomer Identifierを表示する
      */
     function showCustomerIdentifier(orderNumber) {
-        var actions = table
+        var reports = table
             .rows()
             .data()
             .toArray();
-        var action = actions.find(function (action) {
-            return action.order.orderNumber === orderNumber
+        var report = reports.find(function (report) {
+            return report.isPartOf.mainEntity.orderNumber === orderNumber
         });
-        var order = action.order;
+        var order = report.isPartOf.mainEntity;
 
-        var modal = $('#modal-action');
+        var modal = $('#modal-report');
         var title = 'Order `' + order.orderNumber + '` Customer Identifier';
         var body = '<textarea rows="25" class="form-control" placeholder="" disabled="">'
             + JSON.stringify(order.customer.identifier, null, '\t')

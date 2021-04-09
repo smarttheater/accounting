@@ -10,17 +10,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
- * 決済レポートルーター
+ * 経理レポートルーター
  */
 const alvercaapi = require("@alverca/sdk");
 const express_1 = require("express");
 const moment = require("moment-timezone");
-const paymentReportsRouter = express_1.Router();
-paymentReportsRouter.get('', 
+const accountingReportsRouter = express_1.Router();
+accountingReportsRouter.get('', 
 // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
 (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const paymentReportsService = new alvercaapi.service.PaymentReport({
+        const accountingReportService = new alvercaapi.service.AccountingReport({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: req.project
@@ -61,26 +61,27 @@ paymentReportsRouter.get('',
                             }
                         }
                     } }) }, (req.query.unwindAcceptedOffers === 'on') ? { $unwindAcceptedOffers: '1' } : undefined);
-            const searchResult = yield paymentReportsService.search(conditions);
+            const searchResult = yield accountingReportService.search(conditions);
             searchResult.data = searchResult.data.map((a) => {
                 var _a, _b, _c, _d, _e, _f;
+                const order = a.isPartOf.mainEntity;
                 let clientId = '';
-                if (Array.isArray(a.order.customer.identifier)) {
-                    const clientIdPropertyValue = (_a = a.order.customer.identifier.find((p) => p.name === 'clientId')) === null || _a === void 0 ? void 0 : _a.value;
+                if (Array.isArray(order.customer.identifier)) {
+                    const clientIdPropertyValue = (_a = order.customer.identifier.find((p) => p.name === 'clientId')) === null || _a === void 0 ? void 0 : _a.value;
                     if (typeof clientIdPropertyValue === 'string') {
                         clientId = clientIdPropertyValue;
                     }
                 }
                 let itemType = [];
                 let itemTypeStr = '';
-                if (Array.isArray(a.order.acceptedOffers) && a.order.acceptedOffers.length > 0) {
-                    itemTypeStr = a.order.acceptedOffers[0].itemOffered.typeOf;
-                    itemTypeStr += ` x ${a.order.acceptedOffers.length}`;
-                    itemType = a.order.acceptedOffers.map((o) => o.itemOffered.typeOf);
+                if (Array.isArray(order.acceptedOffers) && order.acceptedOffers.length > 0) {
+                    itemTypeStr = order.acceptedOffers[0].itemOffered.typeOf;
+                    itemTypeStr += ` x ${order.acceptedOffers.length}`;
+                    itemType = order.acceptedOffers.map((o) => o.itemOffered.typeOf);
                 }
-                else if (a.order.acceptedOffers !== undefined && typeof a.order.acceptedOffers.typeOf === 'string') {
-                    itemType = [a.order.acceptedOffers.itemOffered.typeOf];
-                    itemTypeStr = a.order.acceptedOffers.itemOffered.typeOf;
+                else if (order.acceptedOffers !== undefined && typeof order.typeOf === 'string') {
+                    itemType = [order.itemOffered.typeOf];
+                    itemTypeStr = order.itemOffered.typeOf;
                 }
                 if (a.typeOf === 'PayAction' && a.purpose.typeOf === 'ReturnAction') {
                     itemType = ['ReturnFee'];
@@ -91,19 +92,20 @@ paymentReportsRouter.get('',
                     amount = a.object.paymentMethod.totalPaymentDue.value;
                 }
                 let eventStartDates = [];
-                if (Array.isArray(a.order.acceptedOffers)) {
-                    eventStartDates = a.order.acceptedOffers
+                if (Array.isArray(order.acceptedOffers)) {
+                    eventStartDates = order.acceptedOffers
                         .filter((o) => o.itemOffered.typeOf === alvercaapi.factory.chevre.reservationType.EventReservation)
                         .map((o) => o.itemOffered.reservationFor.startDate);
                     eventStartDates = [...new Set(eventStartDates)];
                 }
-                else if (((_f = (_e = a.order.acceptedOffers) === null || _e === void 0 ? void 0 : _e.itemOffered) === null || _f === void 0 ? void 0 : _f.typeOf) === alvercaapi.factory.chevre.reservationType.EventReservation) {
-                    eventStartDates = [a.order.acceptedOffers.itemOffered.reservationFor.startDate];
+                else if (((_f = (_e = order.acceptedOffers) === null || _e === void 0 ? void 0 : _e.itemOffered) === null || _f === void 0 ? void 0 : _f.typeOf) === alvercaapi.factory.chevre.reservationType.EventReservation) {
+                    eventStartDates = [order.acceptedOffers.itemOffered.reservationFor.startDate];
                 }
                 return Object.assign(Object.assign({}, a), { amount,
                     itemType,
                     itemTypeStr,
-                    eventStartDates, order: Object.assign(Object.assign({}, a.order), { customer: Object.assign(Object.assign({}, a.order.customer), { clientId }) }) });
+                    eventStartDates,
+                    clientId });
             });
             res.json({
                 draw: req.query.draw,
@@ -137,7 +139,7 @@ paymentReportsRouter.get('',
             //     stream.pipe(res);
         }
         else {
-            res.render('paymentReports/index', {
+            res.render('accountingReports/index', {
                 moment: moment,
                 query: req.query,
                 searchConditions: searchConditions,
@@ -149,4 +151,4 @@ paymentReportsRouter.get('',
         next(error);
     }
 }));
-exports.default = paymentReportsRouter;
+exports.default = accountingReportsRouter;
