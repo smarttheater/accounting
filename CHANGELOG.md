@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - ttts売上レポートCSVをクライアントサイドで生成するように調整
+- 売上レポート検索条件にproject.idを明示的に追加
 
 ### Deprecated
 

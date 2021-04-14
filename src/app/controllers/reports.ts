@@ -128,7 +128,7 @@ export enum ReportType {
 }
 
 /**
- * 集計済みデータ取得API
+ * 売上レポート検索
  */
 // tslint:disable-next-line:max-func-body-length
 export async function getAggregateSales(req: Request, res: Response): Promise<void> {
@@ -137,7 +137,9 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
     const dateTo = getValue(req.query.dateTo);
     const eventStartFrom = getValue(req.query.eventStartFrom);
     const eventStartThrough = getValue(req.query.eventStartThrough);
-    const conditions: any[] = [];
+    const conditions: any[] = [
+        { 'project.id': { $exists: true, $eq: req.project?.id } }
+    ];
 
     const filename = '売上レポート';
 

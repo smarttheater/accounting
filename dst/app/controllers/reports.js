@@ -127,17 +127,20 @@ var ReportType;
     ReportType["Sales"] = "Sales";
 })(ReportType = exports.ReportType || (exports.ReportType = {}));
 /**
- * 集計済みデータ取得API
+ * 売上レポート検索
  */
 // tslint:disable-next-line:max-func-body-length
 function getAggregateSales(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         debug('query:', req.query);
         const dateFrom = getValue(req.query.dateFrom);
         const dateTo = getValue(req.query.dateTo);
         const eventStartFrom = getValue(req.query.eventStartFrom);
         const eventStartThrough = getValue(req.query.eventStartThrough);
-        const conditions = [];
+        const conditions = [
+            { 'project.id': { $exists: true, $eq: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id } }
+        ];
         const filename = '売上レポート';
         try {
             switch (req.query.reportType) {
