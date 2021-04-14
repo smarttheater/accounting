@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- ttts売上レポートCSVをクライアントサイドで生成するように調整
+
 ### Deprecated
 
 ### Removed

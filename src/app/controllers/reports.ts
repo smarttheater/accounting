@@ -4,7 +4,7 @@
 import * as alvercaapi from '@alverca/sdk';
 import * as createDebug from 'debug';
 import { Request, Response } from 'express';
-import { OK } from 'http-status';
+import { INTERNAL_SERVER_ERROR, OK } from 'http-status';
 import * as moment from 'moment-timezone';
 
 const debug = createDebug('@smarttheater/accounting:controllers');
@@ -202,18 +202,100 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
             project: req.project
         });
 
-        const stream = <NodeJS.ReadableStream>await aggregateSalesService.stream({ $and: conditions });
+        if (req.query.format === 'json') {
+            const searchResult = await aggregateSalesService.search({
+                $and: conditions,
+                ...{ limit: Number(req.query.limit), page: Number(req.query.page) }
+            });
 
-        res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
-        res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
-        res.writeHead(OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
+            res.json({
+                results: searchResult.data.map((doc) => {
+                    const eventDate = moment(doc.reservation.reservationFor.startDate)
+                        .toDate();
+                    const dateRecorded: string = // 万が一入塔予約日時より明らかに後であれば、間違ったデータなので調整
+                        (moment(doc.dateRecorded)
+                            .isAfter(moment(eventDate)
+                                .add(1, 'hour')))
+                            ? moment(doc.dateRecorded)
+                                // tslint:disable-next-line:no-magic-numbers
+                                .add(-9, 'hours')
+                                .tz('Asia/Tokyo')
+                                .format('YYYY/MM/DD HH:mm:ss')
+                            : moment(doc.dateRecorded)
+                                .tz('Asia/Tokyo')
+                                .format('YYYY/MM/DD HH:mm:ss');
 
-        // Flush the headers before we start pushing the CSV content
-        res.flushHeaders();
+                    const dateUsed = doc.reservation.reservedTicket?.dateUsed;
+                    const attended = dateUsed !== undefined && dateUsed !== null;
+                    const attendDate: string = // 万が一入塔予約日時より明らかに前であれば、間違ったデータなので調整
+                        (attended)
+                            ? (moment(dateUsed)
+                                .isBefore(moment(eventDate)
+                                    // tslint:disable-next-line:no-magic-numbers
+                                    .add(-3, 'hour')))
+                                ? moment(dateUsed)
+                                    // tslint:disable-next-line:no-magic-numbers
+                                    .add(9, 'hours')
+                                    .tz('Asia/Tokyo')
+                                    .format('YYYY/MM/DD HH:mm:ss')
+                                : moment(dateUsed)
+                                    .tz('Asia/Tokyo')
+                                    .format('YYYY/MM/DD HH:mm:ss')
+                            : '';
 
-        stream.pipe(res);
+                    let seatNumber = doc.reservation?.reservedTicket?.ticketedSeat?.seatNumber;
+                    let ticketTypeName = doc.reservation?.reservedTicket?.ticketType?.name?.ja;
+                    let csvCode = doc.reservation?.reservedTicket?.ticketType?.csvCode;
+                    let unitPrice = (typeof doc.reservation?.reservedTicket?.ticketType?.priceSpecification?.price === 'number')
+                        ? String(doc.reservation?.reservedTicket?.ticketType?.priceSpecification?.price)
+                        : '';
+                    let paymentSeatIndex = (typeof doc.payment_seat_index === 'string' || typeof doc.payment_seat_index === 'number')
+                        ? String(doc.payment_seat_index)
+                        : '';
+                    // 返品手数料の場合、値を調整
+                    if (doc.category === alvercaapi.factory.report.order.ReportCategory.CancellationFee) {
+                        seatNumber = '';
+                        ticketTypeName = '';
+                        csvCode = '';
+                        unitPrice = String(doc.amount);
+                        paymentSeatIndex = '';
+                    }
+
+                    return {
+                        ...doc,
+                        dateRecorded,
+                        attended: (attended) ? 'TRUE' : 'FALSE',
+                        attendDate,
+                        seatNumber,
+                        ticketTypeName,
+                        csvCode,
+                        unitPrice,
+                        paymentSeatIndex,
+                        reservationForStartDay: moment(doc.reservation.reservationFor.startDate)
+                            .tz('Asia/Tokyo')
+                            .format('YYYYMMDD'),
+                        reservationForStartTime: moment(doc.reservation.reservationFor.startDate)
+                            .tz('Asia/Tokyo')
+                            .format('HHmm')
+                    };
+                })
+            });
+        } else {
+            const stream = <NodeJS.ReadableStream>await aggregateSalesService.stream({ $and: conditions });
+
+            res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
+            res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
+            res.writeHead(OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
+
+            // Flush the headers before we start pushing the CSV content
+            res.flushHeaders();
+
+            stream.pipe(res);
+        }
     } catch (error) {
-        res.send(error.message);
+        res.status(INTERNAL_SERVER_ERROR)
+            .json({ error: { message: error.message } });
+        // res.send(error.message);
     }
 }
 

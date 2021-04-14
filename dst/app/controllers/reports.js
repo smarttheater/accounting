@@ -195,16 +195,84 @@ function getAggregateSales(req, res) {
                 auth: req.tttsAuthClient,
                 project: req.project
             });
-            const stream = yield aggregateSalesService.stream({ $and: conditions });
-            res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
-            res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
-            res.writeHead(http_status_1.OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
-            // Flush the headers before we start pushing the CSV content
-            res.flushHeaders();
-            stream.pipe(res);
+            if (req.query.format === 'json') {
+                const searchResult = yield aggregateSalesService.search(Object.assign({ $and: conditions }, { limit: Number(req.query.limit), page: Number(req.query.page) }));
+                res.json({
+                    results: searchResult.data.map((doc) => {
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+                        const eventDate = moment(doc.reservation.reservationFor.startDate)
+                            .toDate();
+                        const dateRecorded = (moment(doc.dateRecorded)
+                            .isAfter(moment(eventDate)
+                            .add(1, 'hour')))
+                            ? moment(doc.dateRecorded)
+                                // tslint:disable-next-line:no-magic-numbers
+                                .add(-9, 'hours')
+                                .tz('Asia/Tokyo')
+                                .format('YYYY/MM/DD HH:mm:ss')
+                            : moment(doc.dateRecorded)
+                                .tz('Asia/Tokyo')
+                                .format('YYYY/MM/DD HH:mm:ss');
+                        const dateUsed = (_a = doc.reservation.reservedTicket) === null || _a === void 0 ? void 0 : _a.dateUsed;
+                        const attended = dateUsed !== undefined && dateUsed !== null;
+                        const attendDate = (attended)
+                            ? (moment(dateUsed)
+                                .isBefore(moment(eventDate)
+                                // tslint:disable-next-line:no-magic-numbers
+                                .add(-3, 'hour')))
+                                ? moment(dateUsed)
+                                    // tslint:disable-next-line:no-magic-numbers
+                                    .add(9, 'hours')
+                                    .tz('Asia/Tokyo')
+                                    .format('YYYY/MM/DD HH:mm:ss')
+                                : moment(dateUsed)
+                                    .tz('Asia/Tokyo')
+                                    .format('YYYY/MM/DD HH:mm:ss')
+                            : '';
+                        let seatNumber = (_d = (_c = (_b = doc.reservation) === null || _b === void 0 ? void 0 : _b.reservedTicket) === null || _c === void 0 ? void 0 : _c.ticketedSeat) === null || _d === void 0 ? void 0 : _d.seatNumber;
+                        let ticketTypeName = (_h = (_g = (_f = (_e = doc.reservation) === null || _e === void 0 ? void 0 : _e.reservedTicket) === null || _f === void 0 ? void 0 : _f.ticketType) === null || _g === void 0 ? void 0 : _g.name) === null || _h === void 0 ? void 0 : _h.ja;
+                        let csvCode = (_l = (_k = (_j = doc.reservation) === null || _j === void 0 ? void 0 : _j.reservedTicket) === null || _k === void 0 ? void 0 : _k.ticketType) === null || _l === void 0 ? void 0 : _l.csvCode;
+                        let unitPrice = (typeof ((_q = (_p = (_o = (_m = doc.reservation) === null || _m === void 0 ? void 0 : _m.reservedTicket) === null || _o === void 0 ? void 0 : _o.ticketType) === null || _p === void 0 ? void 0 : _p.priceSpecification) === null || _q === void 0 ? void 0 : _q.price) === 'number')
+                            ? String((_u = (_t = (_s = (_r = doc.reservation) === null || _r === void 0 ? void 0 : _r.reservedTicket) === null || _s === void 0 ? void 0 : _s.ticketType) === null || _t === void 0 ? void 0 : _t.priceSpecification) === null || _u === void 0 ? void 0 : _u.price)
+                            : '';
+                        let paymentSeatIndex = (typeof doc.payment_seat_index === 'string' || typeof doc.payment_seat_index === 'number')
+                            ? String(doc.payment_seat_index)
+                            : '';
+                        // 返品手数料の場合、値を調整
+                        if (doc.category === alvercaapi.factory.report.order.ReportCategory.CancellationFee) {
+                            seatNumber = '';
+                            ticketTypeName = '';
+                            csvCode = '';
+                            unitPrice = String(doc.amount);
+                            paymentSeatIndex = '';
+                        }
+                        return Object.assign(Object.assign({}, doc), { dateRecorded, attended: (attended) ? 'TRUE' : 'FALSE', attendDate,
+                            seatNumber,
+                            ticketTypeName,
+                            csvCode,
+                            unitPrice,
+                            paymentSeatIndex, reservationForStartDay: moment(doc.reservation.reservationFor.startDate)
+                                .tz('Asia/Tokyo')
+                                .format('YYYYMMDD'), reservationForStartTime: moment(doc.reservation.reservationFor.startDate)
+                                .tz('Asia/Tokyo')
+                                .format('HHmm') });
+                    })
+                });
+            }
+            else {
+                const stream = yield aggregateSalesService.stream({ $and: conditions });
+                res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
+                res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
+                res.writeHead(http_status_1.OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
+                // Flush the headers before we start pushing the CSV content
+                res.flushHeaders();
+                stream.pipe(res);
+            }
         }
         catch (error) {
-            res.send(error.message);
+            res.status(http_status_1.INTERNAL_SERVER_ERROR)
+                .json({ error: { message: error.message } });
+            // res.send(error.message);
         }
     });
 }
