@@ -12,19 +12,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * ユーザー認証ミドルウェア
  */
-const alvercaapi = require("@alverca/sdk");
+const chevreapi = require("@chevre/api-nodejs-client");
 const user_1 = require("../user");
 exports.default = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     req.staffUser = user_1.User.PARSE(req.session, req.hostname, req.originalUrl);
     // 既ログインの場合
     if (req.staffUser.isAuthenticated()) {
-        // alvercaapi認証クライアントをリクエストオブジェクトにセット
+        // chevreapi認証クライアントをリクエストオブジェクトにセット
         const cognitoCredentials = req.session.cognitoCredentials;
         if (cognitoCredentials === undefined) {
             next(new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。'));
             return;
         }
-        const oauth2Client = new alvercaapi.auth.OAuth2({
+        const oauth2Client = new chevreapi.auth.OAuth2({
             domain: process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: process.env.API_CLIENT_ID,
             clientSecret: process.env.API_CLIENT_SECRET

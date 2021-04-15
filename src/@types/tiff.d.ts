@@ -1,4 +1,4 @@
-import * as alvercaapi from '@alverca/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 import { User } from '../app/user';
 
@@ -7,7 +7,7 @@ declare global {
         // tslint:disable-next-line:interface-name
         export interface Request {
             staffUser?: User;
-            tttsAuthClient: alvercaapi.auth.OAuth2;
+            tttsAuthClient: chevreapi.auth.OAuth2;
             project?: {
                 id: string;
             };

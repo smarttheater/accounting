@@ -14,6 +14,7 @@ exports.getAggregateSales = exports.ReportType = exports.search = void 0;
  * レポート出力コントローラー
  */
 const alvercaapi = require("@alverca/sdk");
+const chevreapi = require("@chevre/api-nodejs-client");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -104,10 +105,10 @@ function search(req, res) {
                     'reservation.id': { $exists: true, $eq: reservationIdEq }
                 });
             }
-            const aggregateSalesService = new alvercaapi.service.SalesReport({
+            const aggregateSalesService = new chevreapi.service.SalesReport({
                 endpoint: process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
+                auth: req.tttsAuthClient
+                // project: req.project
             });
             const searchResult = yield aggregateSalesService.search(Object.assign({ $and: conditions }, {
                 limit: Number(req.query.limit),
@@ -193,12 +194,12 @@ function getAggregateSales(req, res) {
                     }
                 });
             }
-            const aggregateSalesService = new alvercaapi.service.SalesReport({
-                endpoint: process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
-            });
             if (req.query.format === 'json') {
+                const aggregateSalesService = new chevreapi.service.SalesReport({
+                    endpoint: process.env.API_ENDPOINT,
+                    auth: req.tttsAuthClient
+                    // project: req.project
+                });
                 const searchResult = yield aggregateSalesService.search(Object.assign({ $and: conditions }, { limit: Number(req.query.limit), page: Number(req.query.page) }));
                 res.json({
                     results: searchResult.data.map((doc) => {
@@ -242,7 +243,7 @@ function getAggregateSales(req, res) {
                             ? String(doc.payment_seat_index)
                             : '';
                         // 返品手数料の場合、値を調整
-                        if (doc.category === alvercaapi.factory.report.order.ReportCategory.CancellationFee) {
+                        if (doc.category === chevreapi.factory.report.order.ReportCategory.CancellationFee) {
                             seatNumber = '';
                             ticketTypeName = '';
                             csvCode = '';
@@ -263,6 +264,11 @@ function getAggregateSales(req, res) {
                 });
             }
             else {
+                const aggregateSalesService = new alvercaapi.service.SalesReport({
+                    endpoint: process.env.ALVERCA_API_ENDPOINT,
+                    auth: req.tttsAuthClient,
+                    project: req.project
+                });
                 const stream = yield aggregateSalesService.stream({ $and: conditions });
                 res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
                 res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');

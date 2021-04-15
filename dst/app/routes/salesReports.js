@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * 売上レポートルーター
  */
-const alvercaapi = require("@alverca/sdk");
+const chevreapi = require("@chevre/api-nodejs-client");
 const createDebug = require("debug");
 const express_1 = require("express");
 const moment = require("moment-timezone");
@@ -25,10 +25,12 @@ function getValue(inputValue) {
 salesReportsRouter.get('', 
 // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
 (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     try {
         debug('query:', req.query);
-        const conditions = [];
+        const conditions = [
+            { 'project.id': { $exists: true, $eq: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id } }
+        ];
         // 登録日From
         if (typeof req.query.dateFrom === 'string' && req.query.dateFrom.length > 0) {
             // 売上げ
@@ -82,28 +84,28 @@ salesReportsRouter.get('',
                 'mainEntity.confirmationNumber': { $exists: true, $eq: confirmationNumberEq }
             });
         }
-        const customerGroupEq = (_a = req.query.customer) === null || _a === void 0 ? void 0 : _a.group;
+        const customerGroupEq = (_b = req.query.customer) === null || _b === void 0 ? void 0 : _b.group;
         if (typeof customerGroupEq === 'string' && customerGroupEq.length > 0) {
             conditions.push({
                 'mainEntity.customer.group': { $exists: true, $eq: customerGroupEq }
             });
         }
-        const reservationForIdEq = (_c = (_b = req.query.reservation) === null || _b === void 0 ? void 0 : _b.reservationFor) === null || _c === void 0 ? void 0 : _c.id;
+        const reservationForIdEq = (_d = (_c = req.query.reservation) === null || _c === void 0 ? void 0 : _c.reservationFor) === null || _d === void 0 ? void 0 : _d.id;
         if (typeof reservationForIdEq === 'string' && reservationForIdEq.length > 0) {
             conditions.push({
                 'reservation.reservationFor.id': { $exists: true, $eq: reservationForIdEq }
             });
         }
-        const reservationIdEq = (_d = req.query.reservation) === null || _d === void 0 ? void 0 : _d.id;
+        const reservationIdEq = (_e = req.query.reservation) === null || _e === void 0 ? void 0 : _e.id;
         if (typeof reservationIdEq === 'string' && reservationIdEq.length > 0) {
             conditions.push({
                 'reservation.id': { $exists: true, $eq: reservationIdEq }
             });
         }
-        const aggregateSalesService = new alvercaapi.service.SalesReport({
+        const aggregateSalesService = new chevreapi.service.SalesReport({
             endpoint: process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient,
-            project: req.project
+            auth: req.tttsAuthClient
+            // project: req.project
         });
         const searchConditions = {
             limit: req.query.limit,

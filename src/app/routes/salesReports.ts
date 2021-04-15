@@ -1,7 +1,7 @@
 /**
  * 売上レポートルーター
  */
-import * as alvercaapi from '@alverca/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 import * as createDebug from 'debug';
 import { Router } from 'express';
 import * as moment from 'moment-timezone';
@@ -21,7 +21,9 @@ salesReportsRouter.get(
     async (req, res, next) => {
         try {
             debug('query:', req.query);
-            const conditions: any[] = [];
+            const conditions: any[] = [
+                { 'project.id': { $exists: true, $eq: req.project?.id } }
+            ];
 
             // 登録日From
             if (typeof req.query.dateFrom === 'string' && req.query.dateFrom.length > 0) {
@@ -101,10 +103,10 @@ salesReportsRouter.get(
                 });
             }
 
-            const aggregateSalesService = new alvercaapi.service.SalesReport({
+            const aggregateSalesService = new chevreapi.service.SalesReport({
                 endpoint: <string>process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
+                auth: req.tttsAuthClient
+                // project: req.project
             });
 
             const searchConditions: any = {

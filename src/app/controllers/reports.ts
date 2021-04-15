@@ -2,6 +2,7 @@
  * レポート出力コントローラー
  */
 import * as alvercaapi from '@alverca/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 import * as createDebug from 'debug';
 import { Request, Response } from 'express';
 import { INTERNAL_SERVER_ERROR, OK } from 'http-status';
@@ -102,10 +103,10 @@ export async function search(req: Request, res: Response): Promise<void> {
             });
         }
 
-        const aggregateSalesService = new alvercaapi.service.SalesReport({
+        const aggregateSalesService = new chevreapi.service.SalesReport({
             endpoint: <string>process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient,
-            project: req.project
+            auth: req.tttsAuthClient
+            // project: req.project
         });
 
         const searchResult = await aggregateSalesService.search({
@@ -198,13 +199,13 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
             });
         }
 
-        const aggregateSalesService = new alvercaapi.service.SalesReport({
-            endpoint: <string>process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient,
-            project: req.project
-        });
-
         if (req.query.format === 'json') {
+            const aggregateSalesService = new chevreapi.service.SalesReport({
+                endpoint: <string>process.env.API_ENDPOINT,
+                auth: req.tttsAuthClient
+                // project: req.project
+            });
+
             const searchResult = await aggregateSalesService.search({
                 $and: conditions,
                 ...{ limit: Number(req.query.limit), page: Number(req.query.page) }
@@ -255,7 +256,7 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
                         ? String(doc.payment_seat_index)
                         : '';
                     // 返品手数料の場合、値を調整
-                    if (doc.category === alvercaapi.factory.report.order.ReportCategory.CancellationFee) {
+                    if (doc.category === chevreapi.factory.report.order.ReportCategory.CancellationFee) {
                         seatNumber = '';
                         ticketTypeName = '';
                         csvCode = '';
@@ -283,6 +284,12 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
                 })
             });
         } else {
+            const aggregateSalesService = new alvercaapi.service.SalesReport({
+                endpoint: <string>process.env.ALVERCA_API_ENDPOINT,
+                auth: req.tttsAuthClient,
+                project: req.project
+            });
+
             const stream = <NodeJS.ReadableStream>await aggregateSalesService.stream({ $and: conditions });
 
             res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
