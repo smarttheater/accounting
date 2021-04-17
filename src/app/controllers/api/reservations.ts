@@ -275,7 +275,7 @@ function addCustomAttributes(reservations: IReservation[], paymentMethods: IPaym
 
         const underName = reservation.underName;
 
-        // checkinsをalvercaapi,cinerinoapiの両方のレスポンスに対応する
+        // checkinsを旧chevre,cinerinoapiの両方のレスポンスに対応する
         let checkins: ICheckin[] = [];
         if (Array.isArray(reservation.checkins)) {
             checkins = reservation.checkins;

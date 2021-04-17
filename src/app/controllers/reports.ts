@@ -1,11 +1,10 @@
 /**
  * レポート出力コントローラー
  */
-import * as alvercaapi from '@alverca/sdk';
 import * as chevreapi from '@chevre/api-nodejs-client';
 import * as createDebug from 'debug';
 import { Request, Response } from 'express';
-import { INTERNAL_SERVER_ERROR, OK } from 'http-status';
+import { INTERNAL_SERVER_ERROR } from 'http-status';
 import * as moment from 'moment-timezone';
 
 const debug = createDebug('@smarttheater/accounting:controllers');
@@ -141,8 +140,6 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
     const conditions: any[] = [
         { 'project.id': { $exists: true, $eq: req.project?.id } }
     ];
-
-    const filename = '売上レポート';
 
     try {
         switch (req.query.reportType) {
@@ -284,22 +281,7 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
                 })
             });
         } else {
-            const aggregateSalesService = new alvercaapi.service.SalesReport({
-                endpoint: <string>process.env.ALVERCA_API_ENDPOINT,
-                auth: req.tttsAuthClient,
-                project: req.project
-            });
-
-            const stream = <NodeJS.ReadableStream>await aggregateSalesService.stream({ $and: conditions });
-
-            res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
-            res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
-            res.writeHead(OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
-
-            // Flush the headers before we start pushing the CSV content
-            res.flushHeaders();
-
-            stream.pipe(res);
+            throw new Error(`format ${req.query.format} not implemented`);
         }
     } catch (error) {
         res.status(INTERNAL_SERVER_ERROR)

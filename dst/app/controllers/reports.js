@@ -13,7 +13,6 @@ exports.getAggregateSales = exports.ReportType = exports.search = void 0;
 /**
  * レポート出力コントローラー
  */
-const alvercaapi = require("@alverca/sdk");
 const chevreapi = require("@chevre/api-nodejs-client");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
@@ -142,7 +141,6 @@ function getAggregateSales(req, res) {
         const conditions = [
             { 'project.id': { $exists: true, $eq: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id } }
         ];
-        const filename = '売上レポート';
         try {
             switch (req.query.reportType) {
                 case ReportType.Sales:
@@ -264,18 +262,7 @@ function getAggregateSales(req, res) {
                 });
             }
             else {
-                const aggregateSalesService = new alvercaapi.service.SalesReport({
-                    endpoint: process.env.ALVERCA_API_ENDPOINT,
-                    auth: req.tttsAuthClient,
-                    project: req.project
-                });
-                const stream = yield aggregateSalesService.stream({ $and: conditions });
-                res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${encodeURIComponent(`${filename}.tsv`)}`);
-                res.setHeader('Content-Type', 'text/csv; charset=Shift_JIS');
-                res.writeHead(http_status_1.OK, { 'Content-Type': 'text/csv; charset=Shift_JIS' });
-                // Flush the headers before we start pushing the CSV content
-                res.flushHeaders();
-                stream.pipe(res);
+                throw new Error(`format ${req.query.format} not implemented`);
             }
         }
         catch (error) {

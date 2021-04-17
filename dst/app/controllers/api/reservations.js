@@ -237,7 +237,7 @@ function addCustomAttributes(reservations, paymentMethods) {
             orderNumber = orderNumberProperty;
         }
         const underName = reservation.underName;
-        // checkinsをalvercaapi,cinerinoapiの両方のレスポンスに対応する
+        // checkinsを旧chevre,cinerinoapiの両方のレスポンスに対応する
         let checkins = [];
         if (Array.isArray(reservation.checkins)) {
             checkins = reservation.checkins;
