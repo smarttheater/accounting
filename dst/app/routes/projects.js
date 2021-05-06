@@ -14,7 +14,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const cinerinoapi = require("@cinerino/sdk");
 const express = require("express");
-const accountingReports_1 = require("./accountingReports");
 const home_1 = require("./home");
 const salesReports_1 = require("./salesReports");
 const projectsRouter = express.Router();
@@ -42,6 +41,5 @@ projectsRouter.get('/:id/logo', (req, res) => __awaiter(void 0, void 0, void 0, 
     res.redirect(logo);
 }));
 projectsRouter.use('/:id/home', home_1.default);
-projectsRouter.use('/:id/accountingReports', accountingReports_1.default);
 projectsRouter.use('/:id/salesReports', salesReports_1.default);
 exports.default = projectsRouter;
