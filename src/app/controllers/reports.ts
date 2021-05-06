@@ -104,8 +104,8 @@ export async function search(req: Request, res: Response): Promise<void> {
 
         const aggregateSalesService = new chevreapi.service.SalesReport({
             endpoint: <string>process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient
-            // project: req.project
+            auth: req.tttsAuthClient,
+            project: { id: String(req.project?.id) }
         });
 
         const searchResult = await aggregateSalesService.search({
@@ -199,8 +199,8 @@ export async function getAggregateSales(req: Request, res: Response): Promise<vo
         if (req.query.format === 'json') {
             const aggregateSalesService = new chevreapi.service.SalesReport({
                 endpoint: <string>process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient
-                // project: req.project
+                auth: req.tttsAuthClient,
+                project: { id: String(req.project?.id) }
             });
 
             const searchResult = await aggregateSalesService.search({

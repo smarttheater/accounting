@@ -21,7 +21,7 @@ const debug = createDebug('@smarttheater/accounting:controllers');
 const RESERVATION_START_DATE = process.env.RESERVATION_START_DATE;
 // tslint:disable-next-line:max-func-body-length
 function search(req, res) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         debug('query:', req.query);
         const dateFrom = getValue(req.query.dateFrom);
@@ -106,8 +106,8 @@ function search(req, res) {
             }
             const aggregateSalesService = new chevreapi.service.SalesReport({
                 endpoint: process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient
-                // project: req.project
+                auth: req.tttsAuthClient,
+                project: { id: String((_e = req.project) === null || _e === void 0 ? void 0 : _e.id) }
             });
             const searchResult = yield aggregateSalesService.search(Object.assign({ $and: conditions }, {
                 limit: Number(req.query.limit),
@@ -131,7 +131,7 @@ var ReportType;
  */
 // tslint:disable-next-line:max-func-body-length
 function getAggregateSales(req, res) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         debug('query:', req.query);
         const dateFrom = getValue(req.query.dateFrom);
@@ -195,8 +195,8 @@ function getAggregateSales(req, res) {
             if (req.query.format === 'json') {
                 const aggregateSalesService = new chevreapi.service.SalesReport({
                     endpoint: process.env.API_ENDPOINT,
-                    auth: req.tttsAuthClient
-                    // project: req.project
+                    auth: req.tttsAuthClient,
+                    project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
                 });
                 const searchResult = yield aggregateSalesService.search(Object.assign({ $and: conditions }, { limit: Number(req.query.limit), page: Number(req.query.page) }));
                 res.json({

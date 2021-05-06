@@ -19,19 +19,19 @@ const accountingReportsRouter = express_1.Router();
 accountingReportsRouter.get('', 
 // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
 (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
         const accountingReportService = new chevreapi.service.AccountingReport({
             endpoint: process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient
-            // project: req.project
+            auth: req.tttsAuthClient,
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         const searchConditions = {
             limit: req.query.limit,
             page: req.query.page
         };
         if (req.query.format === 'datatable') {
-            const conditions = Object.assign({ limit: Number(searchConditions.limit), page: Number(searchConditions.page), project: { id: { $eq: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id } }, order: Object.assign(Object.assign({}, (typeof req.query.orderNumber === 'string' && req.query.orderNumber.length > 0)
+            const conditions = Object.assign({ limit: Number(searchConditions.limit), page: Number(searchConditions.page), project: { id: { $eq: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id } }, order: Object.assign(Object.assign({}, (typeof req.query.orderNumber === 'string' && req.query.orderNumber.length > 0)
                     ? { orderNumber: { $eq: req.query.orderNumber } }
                     : undefined), { paymentMethods: Object.assign({}, (typeof req.query.paymentMethodId === 'string' && req.query.paymentMethodId.length > 0)
                         ? { paymentMethodId: { $eq: req.query.paymentMethodId } }

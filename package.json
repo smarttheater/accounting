@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/api-nodejs-client": "3.61.0",
+    "@chevre/api-nodejs-client": "3.70.2",
     "@cinerino/sdk": "1.20.4",
     "@motionpicture/express-middleware": "0.0.0",
     "admin-lte": "^3.0.5",

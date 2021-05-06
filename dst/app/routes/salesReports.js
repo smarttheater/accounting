@@ -25,7 +25,7 @@ function getValue(inputValue) {
 salesReportsRouter.get('', 
 // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
 (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     try {
         debug('query:', req.query);
         const conditions = [
@@ -104,8 +104,8 @@ salesReportsRouter.get('',
         }
         const aggregateSalesService = new chevreapi.service.SalesReport({
             endpoint: process.env.API_ENDPOINT,
-            auth: req.tttsAuthClient
-            // project: req.project
+            auth: req.tttsAuthClient,
+            project: { id: String((_f = req.project) === null || _f === void 0 ? void 0 : _f.id) }
         });
         const searchConditions = {
             limit: req.query.limit,

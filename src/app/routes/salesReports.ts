@@ -105,8 +105,8 @@ salesReportsRouter.get(
 
             const aggregateSalesService = new chevreapi.service.SalesReport({
                 endpoint: <string>process.env.API_ENDPOINT,
-                auth: req.tttsAuthClient
-                // project: req.project
+                auth: req.tttsAuthClient,
+                project: { id: String(req.project?.id) }
             });
 
             const searchConditions: any = {
