@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@alverca/sdk": "10.0.0",
+    "@chevre/api-nodejs-client": "3.70.2",
     "@cinerino/sdk": "1.20.4",
     "@motionpicture/express-middleware": "0.0.0",
     "admin-lte": "^3.0.5",
@@ -29,6 +29,7 @@
     "express-session": "^1.15.6",
     "express-validator": "^6.9.2",
     "http-status": "^1.0.1",
+    "json2csv": "^5.0.6",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.32",
@@ -97,5 +98,5 @@
     "version": "git add -A",
     "postversion": "git push origin --tags"
   },
-  "version": "7.1.1"
+  "version": "7.2.0"
 }

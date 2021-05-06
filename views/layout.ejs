@@ -125,15 +125,6 @@
                             </a>
                         </li>
                         <li class="nav-header">リソース検索</li>
-                        <li class="nav-item">
-                            <a href="/projects/<%= req.project.id %>/salesReports" class="nav-link">
-                                <i class="nav-icon fa fa-shopping-cart"></i>
-                                <p>
-                                    売上レポート
-                                    <span class="badge badge-danger right"></span>
-                                </p>
-                            </a>
-                        </li>
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->
@@ -191,6 +182,7 @@
     <script src="/node_modules/admin-lte/plugins/jquery-knob/jquery.knob.min.js"></script>
     <!-- daterangepicker -->
     <script src="/node_modules/admin-lte/plugins/moment/moment.min.js"></script>
+    <script src="/node_modules/moment-timezone/builds/moment-timezone-with-data.js"></script>
     <script src="/node_modules/admin-lte/plugins/daterangepicker/daterangepicker.js"></script>
     <!-- Tempusdominus Bootstrap 4 -->
     <script
@@ -206,6 +198,7 @@
     <!-- DataTables -->
     <script src="/node_modules/admin-lte/plugins/datatables/jquery.dataTables.js"></script>
     <script src="/node_modules/admin-lte/plugins/datatables-bs4/js/dataTables.bootstrap4.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/json2csv"></script>
     <%- script %>
 
     <% if (typeof process.env.NEW_CONSOLE_RECOMMENDATION === 'string') { %>

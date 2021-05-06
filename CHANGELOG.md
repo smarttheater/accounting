@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v7.2.0 - 2021-05-06
+
+### Changed
+
+- ttts売上レポートCSVをクライアントサイドで生成するように調整
+- 売上レポート検索条件にproject.idを明示的に追加
+- ttts売上レポートCSVダウンロードをchevreで再実装
+- @alverca/sdkへの依存を削除
+
 ## v7.1.1 - 2021-04-02
 
 ### Changed

@@ -1,7 +1,7 @@
 /**
  * ユーザー認証ミドルウェア
  */
-import * as alvercaapi from '@alverca/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 import { NextFunction, Request, Response } from 'express';
 
@@ -12,7 +12,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
     // 既ログインの場合
     if (req.staffUser.isAuthenticated()) {
-        // alvercaapi認証クライアントをリクエストオブジェクトにセット
+        // chevreapi認証クライアントをリクエストオブジェクトにセット
         const cognitoCredentials = (<Express.Session>req.session).cognitoCredentials;
         if (cognitoCredentials === undefined) {
             next(new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。'));
@@ -20,7 +20,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
             return;
         }
 
-        const oauth2Client = new alvercaapi.auth.OAuth2({
+        const oauth2Client = new chevreapi.auth.OAuth2({
             domain: <string>process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: <string>process.env.API_CLIENT_ID,
             clientSecret: <string>process.env.API_CLIENT_SECRET
