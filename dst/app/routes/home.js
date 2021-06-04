@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * プロジェクトホームルーター
  */
-// import * as cinerinoapi from '@cinerino/sdk';
 // import * as createDebug from 'debug';
 const express = require("express");
 // import { INTERNAL_SERVER_ERROR } from 'http-status';

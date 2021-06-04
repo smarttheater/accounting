@@ -1,4 +1,4 @@
-import * as cinerinoapi from '@cinerino/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 interface IGroup {
     name: string;
@@ -15,7 +15,7 @@ export class User {
     public email: string;
     public telephone: string;
     public username: string;
-    public authClient: cinerinoapi.auth.OAuth2;
+    public authClient: chevreapi.auth.OAuth2;
     public session: Express.Session;
     public state: string;
 
@@ -35,7 +35,7 @@ export class User {
             user.username = session.staffUser.username;
         }
 
-        user.authClient = new cinerinoapi.auth.OAuth2({
+        user.authClient = new chevreapi.auth.OAuth2({
             domain: <string>process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: <string>process.env.API_CLIENT_ID,
             clientSecret: <string>process.env.API_CLIENT_SECRET,
@@ -67,7 +67,7 @@ export class User {
     }
 
     public generateLegacyLogoutUrl(redirect: string) {
-        const authClient = new cinerinoapi.auth.OAuth2({
+        const authClient = new chevreapi.auth.OAuth2({
             domain: <string>process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: <string>process.env.API_CLIENT_ID,
             clientSecret: <string>process.env.API_CLIENT_SECRET,

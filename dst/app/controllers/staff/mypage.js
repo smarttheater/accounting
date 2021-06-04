@@ -13,6 +13,7 @@ exports.printByToken = exports.getPrintToken = exports.print = exports.searchPay
 /**
  * マイページコントローラー
  */
+const chevreapi = require("@chevre/api-nodejs-client");
 const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const jwt = require("jsonwebtoken");
@@ -75,7 +76,7 @@ function searchTicketClerks(req) {
             project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
         });
         const searchMembersResult = yield iamService.searchMembers({
-            member: { typeOf: { $eq: cinerinoapi.factory.personType.Person } }
+            member: { typeOf: { $eq: chevreapi.factory.personType.Person } }
         });
         // ticketClerkロールを持つ管理者のみ表示
         return searchMembersResult.data
@@ -104,7 +105,7 @@ function searchPaymentMethodTypes(req) {
         });
         const searchMembersResult = yield categoryCodeService.search({
             limit: 100,
-            inCodeSet: { identifier: { $eq: cinerinoapi.factory.chevre.categoryCode.CategorySetIdentifier.PaymentMethodType } }
+            inCodeSet: { identifier: { $eq: chevreapi.factory.categoryCode.CategorySetIdentifier.PaymentMethodType } }
         });
         const paymentMethods = {};
         searchMembersResult.data
@@ -153,7 +154,7 @@ function print(req, res, next) {
                 });
                 const searchReservationsResult = yield reservationService.search({
                     limit: 100,
-                    typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+                    typeOf: chevreapi.factory.reservationType.EventReservation,
                     id: { $in: ids }
                 });
                 orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
@@ -218,7 +219,7 @@ function getPrintToken(req, res, next) {
             //     });
             //     const searchReservationsResult = await reservationService.search({
             //         limit: 100,
-            //         typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+            //         typeOf: chevreapi.factory.reservationType.EventReservation,
             //         id: { $in: ids }
             //     });
             //     orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {

@@ -1,6 +1,7 @@
 /**
  * 予約APIコントローラー
  */
+import * as chevreapi from '@chevre/api-nodejs-client';
 import * as cinerinoapi from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
@@ -28,10 +29,9 @@ export interface ICheckin {
     when: Date; // いつ
 }
 
-export type IReservation
-    = cinerinoapi.factory.chevre.reservation.IReservation<cinerinoapi.factory.chevre.reservationType.EventReservation> & {
-        checkins: ICheckin[];
-    };
+export type IReservation = chevreapi.factory.reservation.IReservation<chevreapi.factory.reservationType.EventReservation> & {
+    checkins: ICheckin[];
+};
 
 /**
  * 予約検索
@@ -142,8 +142,7 @@ export async function search(req: Request, res: Response): Promise<void> {
         default:
     }
 
-    const searchConditions:
-        cinerinoapi.factory.chevre.reservation.ISearchConditions<cinerinoapi.factory.chevre.reservationType.EventReservation> = {
+    const searchConditions: chevreapi.factory.reservation.ISearchConditions<chevreapi.factory.reservationType.EventReservation> = {
         limit: limit,
         page: page,
         sort: <any>{
@@ -152,8 +151,8 @@ export async function search(req: Request, res: Response): Promise<void> {
             'reservedTicket.ticketType.id': 1,
             'reservedTicket.ticketedSeat.seatNumber': 1
         },
-        typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-        reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
+        typeOf: chevreapi.factory.reservationType.EventReservation,
+        reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
         reservationFor: {
             startFrom: eventStartFrom,
             startThrough: eventStartThrough
@@ -378,10 +377,10 @@ export async function cancel(req: Request, res: Response, next: NextFunction): P
             // 予約データの解放
             try {
                 await reservationService.cancel({
-                    project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
-                    typeOf: cinerinoapi.factory.assetTransactionType.CancelReservation,
+                    project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                    typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
                     agent: {
-                        typeOf: cinerinoapi.factory.personType.Person,
+                        typeOf: chevreapi.factory.personType.Person,
                         id: String(req.session?.staffUser?.sub),
                         name: String(req.staffUser?.username)
                     },

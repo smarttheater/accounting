@@ -1,7 +1,7 @@
 /**
  * 運行・オンライン販売停止一覧コントローラー
  */
-import * as cinerinoaapi from '@cinerino/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 import { NextFunction, Request, Response } from 'express';
 
@@ -15,7 +15,7 @@ export async function performances(__: Request, res: Response, next: NextFunctio
         // 運行・オンライン販売停止設定画面表示
         res.render('staff/suspension/performances', {
             layout: layout,
-            EventStatusType: cinerinoaapi.factory.chevre.eventStatusType
+            EventStatusType: chevreapi.factory.eventStatusType
         });
     } catch (error) {
         next(new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。'));

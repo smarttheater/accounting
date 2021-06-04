@@ -13,6 +13,7 @@ exports.updateOnlineStatus = exports.search = void 0;
 /**
  * パフォーマンスAPIコントローラー
  */
+const chevreapi = require("@chevre/api-nodejs-client");
 const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const Email = require("email-templates");
@@ -30,7 +31,7 @@ function getUnitPriceByAcceptedOffer(offer) {
     if (offer.priceSpecification !== undefined) {
         const priceSpecification = offer.priceSpecification;
         if (Array.isArray(priceSpecification.priceComponent)) {
-            const unitPriceSpec = priceSpecification.priceComponent.find((c) => c.typeOf === cinerinoapi.factory.chevre.priceSpecificationType.UnitPriceSpecification);
+            const unitPriceSpec = priceSpecification.priceComponent.find((c) => c.typeOf === chevreapi.factory.priceSpecificationType.UnitPriceSpecification);
             if (unitPriceSpec !== undefined && unitPriceSpec.price !== undefined && Number.isInteger(unitPriceSpec.price)) {
                 unitPrice = unitPriceSpec.price;
             }
@@ -57,7 +58,7 @@ function search(req, res) {
                 auth: req.tttsAuthClient,
                 project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
-            const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent, 
+            const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: chevreapi.factory.eventType.ScreeningEvent, 
                 // tslint:disable-next-line:no-magic-numbers
                 startFrom: moment(`${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}T00:00:00+09:00`)
                     .toDate(), 
@@ -108,7 +109,7 @@ function updateOnlineStatus(req, res) {
                 auth: req.tttsAuthClient,
                 project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
             });
-            const searchEventsResult = yield eventService.search(Object.assign({ limit: 100, typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent }, {
+            const searchEventsResult = yield eventService.search(Object.assign({ limit: 100, typeOf: chevreapi.factory.eventType.ScreeningEvent }, {
                 id: { $in: performanceIds }
             }));
             const updatingEvents = searchEventsResult.data;
@@ -116,11 +117,11 @@ function updateOnlineStatus(req, res) {
                 const performanceId = updatingEvent.id;
                 let sendEmailMessageParams = [];
                 // 運行停止の時(＜必ずオンライン販売停止・infoセット済)、Cinerinoにメール送信指定
-                if (evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled) {
+                if (evStatus === chevreapi.factory.eventStatusType.EventCancelled) {
                     const targetOrders4performance = targetOrders.filter((o) => {
                         return o.acceptedOffers.some((offer) => {
                             const reservation = offer.itemOffered;
-                            return reservation.typeOf === cinerinoapi.factory.chevre.reservationType.EventReservation
+                            return reservation.typeOf === chevreapi.factory.reservationType.EventReservation
                                 && reservation.reservationFor.id === performanceId;
                         });
                     });
@@ -171,7 +172,7 @@ function getTargetReservationsForRefund(req, performanceIds) {
         let numData4reservations = limit4reservations;
         while (numData4reservations === limit4reservations) {
             page4reservations += 1;
-            const searchReservationsResult = yield reservationService.search(Object.assign({ limit: limit4reservations, page: page4reservations, typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation, reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed], 
+            const searchReservationsResult = yield reservationService.search(Object.assign({ limit: limit4reservations, page: page4reservations, typeOf: chevreapi.factory.reservationType.EventReservation, reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed], 
                 // クライアントがfrontend or pos
                 underName: {
                     identifiers: [
@@ -265,7 +266,7 @@ function createEmail(order, notice) {
         });
         // メール作成
         const emailMessage = {
-            typeOf: cinerinoapi.factory.chevre.creativeWorkType.EmailMessage,
+            typeOf: chevreapi.factory.creativeWorkType.EmailMessage,
             identifier: `updateOnlineStatus-${order.orderNumber}`,
             name: `updateOnlineStatus-${order.orderNumber}`,
             sender: {
@@ -294,9 +295,9 @@ function createEmail(order, notice) {
                 .toDate()
         };
         return {
-            typeOf: cinerinoapi.factory.actionType.SendAction,
+            typeOf: chevreapi.factory.actionType.SendAction,
             agent: {
-                typeOf: cinerinoapi.factory.personType.Person,
+                typeOf: chevreapi.factory.personType.Person,
                 id: ''
             },
             object: emailMessage,

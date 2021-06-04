@@ -1,6 +1,7 @@
 /**
  * マイページコントローラー
  */
+import * as chevreapi from '@chevre/api-nodejs-client';
 import * as cinerinoapi from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
@@ -25,7 +26,7 @@ export type IPrintObject = string[];
  */
 export async function createPrintToken(
     object: IPrintObject,
-    orders: cinerinoapi.factory.order.IOrder[]
+    orders: chevreapi.factory.order.IOrder[]
 ): Promise<IPrintToken> {
     return new Promise<IPrintToken>((resolve, reject) => {
         const payload = {
@@ -81,7 +82,7 @@ export async function searchTicketClerks(req: Request): Promise<ITicketClerk[]> 
         project: { id: req.project?.id }
     });
     const searchMembersResult = await iamService.searchMembers({
-        member: { typeOf: { $eq: cinerinoapi.factory.personType.Person } }
+        member: { typeOf: { $eq: chevreapi.factory.personType.Person } }
     });
 
     // ticketClerkロールを持つ管理者のみ表示
@@ -108,7 +109,7 @@ export async function searchPaymentMethodTypes(req: Request): Promise<IPaymentMe
     });
     const searchMembersResult = await categoryCodeService.search({
         limit: 100,
-        inCodeSet: { identifier: { $eq: cinerinoapi.factory.chevre.categoryCode.CategorySetIdentifier.PaymentMethodType } }
+        inCodeSet: { identifier: { $eq: chevreapi.factory.categoryCode.CategorySetIdentifier.PaymentMethodType } }
     });
 
     const paymentMethods: IPaymentMethods = {};
@@ -158,7 +159,7 @@ export async function print(req: Request, res: Response, next: NextFunction): Pr
 
             const searchReservationsResult = await reservationService.search({
                 limit: 100,
-                typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+                typeOf: chevreapi.factory.reservationType.EventReservation,
                 id: { $in: ids }
             });
             orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
@@ -225,7 +226,7 @@ export async function getPrintToken(req: Request, res: Response, next: NextFunct
 
         //     const searchReservationsResult = await reservationService.search({
         //         limit: 100,
-        //         typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
+        //         typeOf: chevreapi.factory.reservationType.EventReservation,
         //         id: { $in: ids }
         //     });
         //     orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
@@ -239,7 +240,7 @@ export async function getPrintToken(req: Request, res: Response, next: NextFunct
         //     }))];
         // }
 
-        let orders: cinerinoapi.factory.order.IOrder[] = [];
+        let orders: chevreapi.factory.order.IOrder[] = [];
         if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
             // 印刷対象注文検索
             const orderService = new cinerinoapi.service.Order({

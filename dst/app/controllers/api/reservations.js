@@ -13,6 +13,7 @@ exports.cancel = exports.search = void 0;
 /**
  * 予約APIコントローラー
  */
+const chevreapi = require("@chevre/api-nodejs-client");
 const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
@@ -134,7 +135,7 @@ function search(req, res) {
                 reservationNumber: 1,
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
-            }, typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation, reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed], reservationFor: {
+            }, typeOf: chevreapi.factory.reservationType.EventReservation, reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed], reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
             }, underName: {
@@ -322,10 +323,10 @@ function cancel(req, res, next) {
                 // 予約データの解放
                 try {
                     yield reservationService.cancel({
-                        project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' },
-                        typeOf: cinerinoapi.factory.assetTransactionType.CancelReservation,
+                        project: { typeOf: chevreapi.factory.organizationType.Project, id: '' },
+                        typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
                         agent: {
-                            typeOf: cinerinoapi.factory.personType.Person,
+                            typeOf: chevreapi.factory.personType.Person,
                             id: String((_c = (_b = req.session) === null || _b === void 0 ? void 0 : _b.staffUser) === null || _c === void 0 ? void 0 : _c.sub),
                             name: String((_d = req.staffUser) === null || _d === void 0 ? void 0 : _d.username)
                         },
