@@ -323,7 +323,7 @@ function cancel(req, res, next) {
                 try {
                     yield reservationService.cancel({
                         project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' },
-                        typeOf: cinerinoapi.factory.chevre.transactionType.CancelReservation,
+                        typeOf: cinerinoapi.factory.assetTransactionType.CancelReservation,
                         agent: {
                             typeOf: cinerinoapi.factory.personType.Person,
                             id: String((_c = (_b = req.session) === null || _b === void 0 ? void 0 : _b.staffUser) === null || _c === void 0 ? void 0 : _c.sub),

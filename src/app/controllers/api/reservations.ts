@@ -379,7 +379,7 @@ export async function cancel(req: Request, res: Response, next: NextFunction): P
             try {
                 await reservationService.cancel({
                     project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
-                    typeOf: cinerinoapi.factory.chevre.transactionType.CancelReservation,
+                    typeOf: cinerinoapi.factory.assetTransactionType.CancelReservation,
                     agent: {
                         typeOf: cinerinoapi.factory.personType.Person,
                         id: String(req.session?.staffUser?.sub),

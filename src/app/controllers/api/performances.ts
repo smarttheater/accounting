@@ -309,7 +309,6 @@ async function createEmail(
 
     // メール作成
     const emailMessage: cinerinoapi.factory.creativeWork.message.email.ICreativeWork = {
-        project: { typeOf: order.project.typeOf, id: order.project.id },
         typeOf: cinerinoapi.factory.chevre.creativeWorkType.EmailMessage,
         identifier: `updateOnlineStatus-${order.orderNumber}`,
         name: `updateOnlineStatus-${order.orderNumber}`,
