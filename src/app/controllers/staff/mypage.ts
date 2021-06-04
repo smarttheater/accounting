@@ -76,10 +76,10 @@ export interface ITicketClerk {
 const TICKET_CLERK_USERNAMES_EXCLUDED = ['1F-ELEVATOR', 'TOPDECK-ELEVATOR', 'LANE', 'GATE'];
 
 export async function searchTicketClerks(req: Request): Promise<ITicketClerk[]> {
-    const iamService = new cinerinoapi.service.IAM({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const iamService = new chevreapi.service.IAM({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
     const searchMembersResult = await iamService.searchMembers({
         member: { typeOf: { $eq: chevreapi.factory.personType.Person } }
@@ -102,10 +102,10 @@ export async function searchTicketClerks(req: Request): Promise<ITicketClerk[]> 
 }
 
 export async function searchPaymentMethodTypes(req: Request): Promise<IPaymentMethods> {
-    const categoryCodeService = new cinerinoapi.service.CategoryCode({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const categoryCodeService = new chevreapi.service.CategoryCode({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
     const searchMembersResult = await categoryCodeService.search({
         limit: 100,
@@ -151,10 +151,10 @@ export async function print(req: Request, res: Response, next: NextFunction): Pr
 
         // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
         if (ids.length > 0 && orderNumbers.length === 0) {
-            const reservationService = new cinerinoapi.service.Reservation({
-                endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            const reservationService = new chevreapi.service.Reservation({
+                endpoint: <string>process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: req.project?.id }
+                project: { id: String(req.project?.id) }
             });
 
             const searchReservationsResult = await reservationService.search({
@@ -176,10 +176,10 @@ export async function print(req: Request, res: Response, next: NextFunction): Pr
         let orders: cinerinoapi.factory.order.IOrder[] = [];
         if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
             // 印刷対象注文検索
-            const orderService = new cinerinoapi.service.Order({
-                endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            const orderService = new chevreapi.service.Order({
+                endpoint: <string>process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: req.project?.id }
+                project: { id: String(req.project?.id) }
             });
             const searchOrdersResult = await orderService.search({
                 limit: 100,
@@ -217,39 +217,17 @@ export async function getPrintToken(req: Request, res: Response, next: NextFunct
         orderNumbers = [...new Set(orderNumbers)];
         debug('printing reservations...ids:', ids, 'orderNumber:', orderNumbers);
 
-        // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
-        // if (ids.length > 0 && orderNumbers.length === 0) {
-        //     const reservationService = new cinerinoapi.service.Reservation({
-        //         endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-        //         auth: req.tttsAuthClient
-        //     });
-
-        //     const searchReservationsResult = await reservationService.search({
-        //         limit: 100,
-        //         typeOf: chevreapi.factory.reservationType.EventReservation,
-        //         id: { $in: ids }
-        //     });
-        //     orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
-        //         let orderNumber = '';
-        //         const orderNumberProperty = reservation.underName?.identifier?.find((p) => p.name === 'orderNumber');
-        //         if (orderNumberProperty !== undefined) {
-        //             orderNumber = orderNumberProperty.value;
-        //         }
-
-        //         return orderNumber;
-        //     }))];
-        // }
-
         let orders: chevreapi.factory.order.IOrder[] = [];
         if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
             // 印刷対象注文検索
-            const orderService = new cinerinoapi.service.Order({
-                endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            const orderService = new chevreapi.service.Order({
+                endpoint: <string>process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: req.project?.id }
+                project: { id: String(req.project?.id) }
             });
             const searchOrdersResult = await orderService.search({
                 limit: 100,
+                project: { id: { $eq: req.project?.id } },
                 orderNumbers: orderNumbers
             });
             orders = searchOrdersResult.data;

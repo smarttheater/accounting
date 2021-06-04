@@ -53,10 +53,10 @@ function search(req, res) {
             // noTotalCount: '1',
             // useLegacySearch: '1'
             const day = String(req.query.day);
-            const eventService = new cinerinoapi.service.Event({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
+            const eventService = new chevreapi.service.Event({
+                endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
             });
             const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: chevreapi.factory.eventType.ScreeningEvent, 
                 // tslint:disable-next-line:no-magic-numbers
@@ -128,11 +128,13 @@ function updateOnlineStatus(req, res) {
                     sendEmailMessageParams = yield createEmails(targetOrders4performance, notice);
                 }
                 // Chevreイベントステータスに反映
-                yield eventService.updatePartially(Object.assign({ id: performanceId, eventStatus: evStatus }, {
+                yield eventService.updatePartially({
+                    id: performanceId,
+                    eventStatus: evStatus,
                     onUpdated: {
                         sendEmailMessage: sendEmailMessageParams
                     }
-                }));
+                });
             }
             res.status(http_status_1.NO_CONTENT)
                 .end();
@@ -154,17 +156,17 @@ exports.updateOnlineStatus = updateOnlineStatus;
  */
 // tslint:disable-next-line:max-func-body-length
 function getTargetReservationsForRefund(req, performanceIds) {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
-        const orderService = new cinerinoapi.service.Order({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const orderService = new chevreapi.service.Order({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const reservationService = new chevreapi.service.Reservation({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id }
+            project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
         });
         let targetReservations = [];
         const limit4reservations = 100;
@@ -217,6 +219,7 @@ function getTargetReservationsForRefund(req, performanceIds) {
                 const searchOrdersResult = yield orderService.search({
                     limit: limit,
                     page: page,
+                    project: { id: { $eq: (_c = req.project) === null || _c === void 0 ? void 0 : _c.id } },
                     orderNumbers: targetOrderNumbers
                 });
                 numData = searchOrdersResult.data.length;

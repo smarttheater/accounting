@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - update @chevre/api-nodejs-client
 - update @cinerino/sdk
+- @chevre/api-nodejs-clientで再構築
 
 ### Deprecated
 

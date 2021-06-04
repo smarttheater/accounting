@@ -14,7 +14,6 @@ exports.printByToken = exports.getPrintToken = exports.print = exports.searchPay
  * マイページコントローラー
  */
 const chevreapi = require("@chevre/api-nodejs-client");
-const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const jwt = require("jsonwebtoken");
 const querystring = require("querystring");
@@ -70,10 +69,10 @@ const TICKET_CLERK_USERNAMES_EXCLUDED = ['1F-ELEVATOR', 'TOPDECK-ELEVATOR', 'LAN
 function searchTicketClerks(req) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const iamService = new cinerinoapi.service.IAM({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const iamService = new chevreapi.service.IAM({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         const searchMembersResult = yield iamService.searchMembers({
             member: { typeOf: { $eq: chevreapi.factory.personType.Person } }
@@ -98,10 +97,10 @@ exports.searchTicketClerks = searchTicketClerks;
 function searchPaymentMethodTypes(req) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const categoryCodeService = new cinerinoapi.service.CategoryCode({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const categoryCodeService = new chevreapi.service.CategoryCode({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         const searchMembersResult = yield categoryCodeService.search({
             limit: 100,
@@ -147,10 +146,10 @@ function print(req, res, next) {
             debug('printing reservations...ids:', ids, 'orderNumber:', orderNumbers);
             // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
             if (ids.length > 0 && orderNumbers.length === 0) {
-                const reservationService = new cinerinoapi.service.Reservation({
-                    endpoint: process.env.CINERINO_API_ENDPOINT,
+                const reservationService = new chevreapi.service.Reservation({
+                    endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
-                    project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                    project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
                 });
                 const searchReservationsResult = yield reservationService.search({
                     limit: 100,
@@ -170,10 +169,10 @@ function print(req, res, next) {
             let orders = [];
             if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
                 // 印刷対象注文検索
-                const orderService = new cinerinoapi.service.Order({
-                    endpoint: process.env.CINERINO_API_ENDPOINT,
+                const orderService = new chevreapi.service.Order({
+                    endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
-                    project: { id: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id }
+                    project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
                 });
                 const searchOrdersResult = yield orderService.search({
                     limit: 100,
@@ -204,43 +203,24 @@ exports.print = print;
  * 印刷情報をトークン化する
  */
 function getPrintToken(req, res, next) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const ids = req.body.ids;
             let orderNumbers = req.body.orderNumbers;
             orderNumbers = [...new Set(orderNumbers)];
             debug('printing reservations...ids:', ids, 'orderNumber:', orderNumbers);
-            // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
-            // if (ids.length > 0 && orderNumbers.length === 0) {
-            //     const reservationService = new cinerinoapi.service.Reservation({
-            //         endpoint: <string>process.env.CINERINO_API_ENDPOINT,
-            //         auth: req.tttsAuthClient
-            //     });
-            //     const searchReservationsResult = await reservationService.search({
-            //         limit: 100,
-            //         typeOf: chevreapi.factory.reservationType.EventReservation,
-            //         id: { $in: ids }
-            //     });
-            //     orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
-            //         let orderNumber = '';
-            //         const orderNumberProperty = reservation.underName?.identifier?.find((p) => p.name === 'orderNumber');
-            //         if (orderNumberProperty !== undefined) {
-            //             orderNumber = orderNumberProperty.value;
-            //         }
-            //         return orderNumber;
-            //     }))];
-            // }
             let orders = [];
             if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
                 // 印刷対象注文検索
-                const orderService = new cinerinoapi.service.Order({
-                    endpoint: process.env.CINERINO_API_ENDPOINT,
+                const orderService = new chevreapi.service.Order({
+                    endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
-                    project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                    project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
                 });
                 const searchOrdersResult = yield orderService.search({
                     limit: 100,
+                    project: { id: { $eq: (_b = req.project) === null || _b === void 0 ? void 0 : _b.id } },
                     orderNumbers: orderNumbers
                 });
                 orders = searchOrdersResult.data;

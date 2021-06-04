@@ -53,10 +53,10 @@ export async function search(req: Request, res: Response): Promise<void> {
         // useLegacySearch: '1'
         const day = String(req.query.day);
 
-        const eventService = new cinerinoapi.service.Event({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        const eventService = new chevreapi.service.Event({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
         const searchResult = await eventService.search({
             limit: 100,
@@ -151,10 +151,8 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
             await eventService.updatePartially({
                 id: performanceId,
                 eventStatus: evStatus,
-                ...{
-                    onUpdated: {
-                        sendEmailMessage: sendEmailMessageParams
-                    }
+                onUpdated: {
+                    sendEmailMessage: sendEmailMessageParams
                 }
             });
         }
@@ -177,16 +175,16 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
  */
 // tslint:disable-next-line:max-func-body-length
 async function getTargetReservationsForRefund(req: Request, performanceIds: string[]): Promise<chevreapi.factory.order.IOrder[]> {
-    const orderService = new cinerinoapi.service.Order({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const orderService = new chevreapi.service.Order({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
-    const reservationService = new cinerinoapi.service.Reservation({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const reservationService = new chevreapi.service.Reservation({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
     let targetReservations:
@@ -252,6 +250,7 @@ async function getTargetReservationsForRefund(req: Request, performanceIds: stri
             const searchOrdersResult = await orderService.search({
                 limit: limit,
                 page: page,
+                project: { id: { $eq: req.project?.id } },
                 orderNumbers: targetOrderNumbers
             });
             numData = searchOrdersResult.data.length;

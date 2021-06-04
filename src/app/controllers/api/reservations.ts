@@ -202,10 +202,10 @@ export async function search(req: Request, res: Response): Promise<void> {
 
     // Cinerinoでの予約検索
     debug('searching reservations...', searchConditions);
-    const reservationService = new cinerinoapi.service.Reservation({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const reservationService = new chevreapi.service.Reservation({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
     try {

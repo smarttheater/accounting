@@ -175,10 +175,10 @@ function search(req, res) {
         });
         // Cinerinoでの予約検索
         debug('searching reservations...', searchConditions);
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const reservationService = new chevreapi.service.Reservation({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         try {
             // 総数検索
