@@ -14,7 +14,7 @@ exports.cancel = exports.search = void 0;
  * 予約APIコントローラー
  */
 const chevreapi = require("@chevre/api-nodejs-client");
-const cinerinoapi = require("@cinerino/sdk");
+// import * as cinerinoapi from '@cinerino/sdk';
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -313,29 +313,49 @@ function cancel(req, res, next) {
             if (!Array.isArray(reservationIds)) {
                 throw new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。');
             }
-            const reservationService = new cinerinoapi.service.Reservation({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
+            // const reservationService = new cinerinoapi.service.Reservation({
+            //     endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            //     auth: req.tttsAuthClient,
+            //     project: { id: req.project?.id }
+            // });
+            const cancelReservationService = new chevreapi.service.assetTransaction.CancelReservation({
+                endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
             });
             const promises = reservationIds.map((id) => __awaiter(this, void 0, void 0, function* () {
-                var _b, _c, _d;
-                // 予約データの解放
+                var _b, _c, _d, _e, _f;
+                // IDごとに予約取消
                 try {
-                    yield reservationService.cancel({
-                        project: { typeOf: chevreapi.factory.organizationType.Project, id: '' },
+                    // await reservationService.cancel({
+                    //     project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                    //     typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                    //     agent: {
+                    //         typeOf: chevreapi.factory.personType.Person,
+                    //         id: String(req.session?.staffUser?.sub),
+                    //         name: String(req.staffUser?.username)
+                    //     },
+                    //     object: {
+                    //         reservation: { id }
+                    //     },
+                    //     expires: moment()
+                    //         .add(1, 'minutes')
+                    //         .toDate()
+                    // });
+                    yield cancelReservationService.startAndConfirm({
+                        project: { typeOf: chevreapi.factory.organizationType.Project, id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) },
                         typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                        expires: moment()
+                            .add(1, 'minute')
+                            .toDate(),
                         agent: {
                             typeOf: chevreapi.factory.personType.Person,
-                            id: String((_c = (_b = req.session) === null || _b === void 0 ? void 0 : _b.staffUser) === null || _c === void 0 ? void 0 : _c.sub),
-                            name: String((_d = req.staffUser) === null || _d === void 0 ? void 0 : _d.username)
+                            id: String((_d = (_c = req.session) === null || _c === void 0 ? void 0 : _c.staffUser) === null || _d === void 0 ? void 0 : _d.sub),
+                            name: `${(_e = req.staffUser) === null || _e === void 0 ? void 0 : _e.givenName} ${(_f = req.staffUser) === null || _f === void 0 ? void 0 : _f.familyName}`
                         },
                         object: {
                             reservation: { id }
-                        },
-                        expires: moment()
-                            .add(1, 'minutes')
-                            .toDate()
+                        }
                     });
                     successIds.push(id);
                 }

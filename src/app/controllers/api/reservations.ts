@@ -2,7 +2,7 @@
  * 予約APIコントローラー
  */
 import * as chevreapi from '@chevre/api-nodejs-client';
-import * as cinerinoapi from '@cinerino/sdk';
+// import * as cinerinoapi from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
 import { NextFunction, Request, Response } from 'express';
@@ -367,29 +367,50 @@ export async function cancel(req: Request, res: Response, next: NextFunction): P
             throw new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。');
         }
 
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        // const reservationService = new cinerinoapi.service.Reservation({
+        //     endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        //     auth: req.tttsAuthClient,
+        //     project: { id: req.project?.id }
+        // });
+        const cancelReservationService = new chevreapi.service.assetTransaction.CancelReservation({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
 
         const promises = reservationIds.map(async (id) => {
-            // 予約データの解放
+            // IDごとに予約取消
             try {
-                await reservationService.cancel({
-                    project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                // await reservationService.cancel({
+                //     project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                //     typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                //     agent: {
+                //         typeOf: chevreapi.factory.personType.Person,
+                //         id: String(req.session?.staffUser?.sub),
+                //         name: String(req.staffUser?.username)
+                //     },
+                //     object: {
+                //         reservation: { id }
+                //     },
+                //     expires: moment()
+                //         .add(1, 'minutes')
+                //         .toDate()
+                // });
+
+                await cancelReservationService.startAndConfirm({
+                    project: { typeOf: chevreapi.factory.organizationType.Project, id: String(req.project?.id) }, // プロジェクト指定は実質無意味
                     typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                    expires: moment()
+                        .add(1, 'minute')
+                        .toDate(),
                     agent: {
                         typeOf: chevreapi.factory.personType.Person,
                         id: String(req.session?.staffUser?.sub),
-                        name: String(req.staffUser?.username)
+                        name: `${req.staffUser?.givenName} ${req.staffUser?.familyName}`
                     },
                     object: {
                         reservation: { id }
-                    },
-                    expires: moment()
-                        .add(1, 'minutes')
-                        .toDate()
+                    }
                 });
 
                 successIds.push(id);
