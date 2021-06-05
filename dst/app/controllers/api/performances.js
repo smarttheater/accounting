@@ -14,7 +14,6 @@ exports.updateOnlineStatus = exports.search = void 0;
  * パフォーマンスAPIコントローラー
  */
 const chevreapi = require("@chevre/api-nodejs-client");
-const cinerinoapi = require("@cinerino/sdk");
 const createDebug = require("debug");
 const Email = require("email-templates");
 const http_status_1 = require("http-status");
@@ -104,14 +103,17 @@ function updateOnlineStatus(req, res) {
             // const now = new Date();
             // 返金対象注文情報取得
             const targetOrders = yield getTargetReservationsForRefund(req, performanceIds);
-            const eventService = new cinerinoapi.service.Event({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
+            const eventService = new chevreapi.service.Event({
+                endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
             });
-            const searchEventsResult = yield eventService.search(Object.assign({ limit: 100, typeOf: chevreapi.factory.eventType.ScreeningEvent }, {
+            const searchEventsResult = yield eventService.search({
+                limit: 100,
+                page: 1,
+                typeOf: chevreapi.factory.eventType.ScreeningEvent,
                 id: { $in: performanceIds }
-            }));
+            });
             const updatingEvents = searchEventsResult.data;
             for (const updatingEvent of updatingEvents) {
                 const performanceId = updatingEvent.id;
@@ -128,11 +130,21 @@ function updateOnlineStatus(req, res) {
                     sendEmailMessageParams = yield createEmails(targetOrders4performance, notice);
                 }
                 // Chevreイベントステータスに反映
+                // await eventService.updatePartially({
+                //     id: performanceId,
+                //     eventStatus: evStatus,
+                //     onUpdated: {
+                //         sendEmailMessage: sendEmailMessageParams
+                //     }
+                // });
                 yield eventService.updatePartially({
                     id: performanceId,
-                    eventStatus: evStatus,
-                    onUpdated: {
-                        sendEmailMessage: sendEmailMessageParams
+                    attributes: {
+                        typeOf: updatingEvent.typeOf,
+                        eventStatus: evStatus,
+                        onUpdated: {
+                            sendEmailMessage: sendEmailMessageParams
+                        }
                     }
                 });
             }

@@ -14,7 +14,6 @@ exports.cancel = exports.search = void 0;
  * 予約APIコントローラー
  */
 const chevreapi = require("@chevre/api-nodejs-client");
-// import * as cinerinoapi from '@cinerino/sdk';
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");

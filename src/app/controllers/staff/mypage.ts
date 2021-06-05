@@ -2,7 +2,6 @@
  * マイページコントローラー
  */
 import * as chevreapi from '@chevre/api-nodejs-client';
-import * as cinerinoapi from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
 import { NextFunction, Request, Response } from 'express';
@@ -173,7 +172,7 @@ export async function print(req: Request, res: Response, next: NextFunction): Pr
             }))];
         }
 
-        let orders: cinerinoapi.factory.order.IOrder[] = [];
+        let orders: chevreapi.factory.order.IOrder[] = [];
         if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
             // 印刷対象注文検索
             const orderService = new chevreapi.service.Order({

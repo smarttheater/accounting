@@ -2,7 +2,6 @@
  * パフォーマンスAPIコントローラー
  */
 import * as chevreapi from '@chevre/api-nodejs-client';
-import * as cinerinoapi from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
 import * as Email from 'email-templates';
@@ -114,18 +113,17 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
         // 返金対象注文情報取得
         const targetOrders = await getTargetReservationsForRefund(req, performanceIds);
 
-        const eventService = new cinerinoapi.service.Event({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        const eventService = new chevreapi.service.Event({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
 
         const searchEventsResult = await eventService.search<chevreapi.factory.eventType.ScreeningEvent>({
             limit: 100,
+            page: 1,
             typeOf: chevreapi.factory.eventType.ScreeningEvent,
-            ...{
-                id: { $in: performanceIds }
-            }
+            id: { $in: performanceIds }
         });
         const updatingEvents = searchEventsResult.data;
 
@@ -148,11 +146,21 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
             }
 
             // Chevreイベントステータスに反映
+            // await eventService.updatePartially({
+            //     id: performanceId,
+            //     eventStatus: evStatus,
+            //     onUpdated: {
+            //         sendEmailMessage: sendEmailMessageParams
+            //     }
+            // });
             await eventService.updatePartially({
                 id: performanceId,
-                eventStatus: evStatus,
-                onUpdated: {
-                    sendEmailMessage: sendEmailMessageParams
+                attributes: {
+                    typeOf: updatingEvent.typeOf,
+                    eventStatus: evStatus,
+                    onUpdated: {
+                        sendEmailMessage: sendEmailMessageParams
+                    }
                 }
             });
         }
