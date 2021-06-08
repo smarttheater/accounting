@@ -169,7 +169,6 @@ export async function search(req: Request, res: Response): Promise<void> {
             telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
             identifier: {
                 $all: [
-                    // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                     ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                 ],
                 $in: [
@@ -187,14 +186,12 @@ export async function search(req: Request, res: Response): Promise<void> {
         additionalTicketText: (watcherName !== null)
             ? { $regex: watcherName, $options: 'i' }
             : undefined,
-        ...{
-            // brokerのusernameで検索
-            broker: {
-                identifier: {
-                    $all: [
-                        ...(owner !== null) ? [{ name: 'username', value: owner }] : []
-                    ]
-                }
+        // brokerのusernameで検索
+        broker: {
+            identifier: {
+                $all: [
+                    ...(owner !== null) ? [{ name: 'username', value: owner }] : []
+                ]
             }
         }
     };
@@ -234,11 +231,12 @@ export async function search(req: Request, res: Response): Promise<void> {
             message: message
         });
     } catch (error) {
-        res.status(INTERNAL_SERVER_ERROR).json({
-            errors: [{
-                message: error.message
-            }]
-        });
+        res.status(INTERNAL_SERVER_ERROR)
+            .json({
+                errors: [{
+                    message: error.message
+                }]
+            });
     }
 }
 
@@ -298,10 +296,6 @@ function addCustomAttributes(reservations: IReservation[], paymentMethods: IPaym
                 ? '---'
                 : paymentMethod2name(paymentMethod4reservation, paymentMethods),
             performance: reservation.reservationFor.id,
-            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
-            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_canceled: false,
             ticket_type_name: reservation.reservedTicket.ticketType.name,
             transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'

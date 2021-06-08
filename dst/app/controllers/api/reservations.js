@@ -129,15 +129,22 @@ function search(req, res) {
                 break;
             default:
         }
-        const searchConditions = Object.assign({ limit: limit, page: page, sort: {
+        const searchConditions = {
+            limit: limit,
+            page: page,
+            sort: {
                 'reservationFor.startDate': 1,
                 reservationNumber: 1,
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
-            }, typeOf: chevreapi.factory.reservationType.EventReservation, reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed], reservationFor: {
+            },
+            typeOf: chevreapi.factory.reservationType.EventReservation,
+            reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
+            reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
-            }, underName: {
+            },
+            underName: {
                 familyName: (purchaserLastName !== null)
                     ? { $regex: purchaserLastName, $options: 'i' }
                     : undefined,
@@ -149,7 +156,6 @@ function search(req, res) {
                     : undefined,
                 telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
                 identifier: Object.assign({ $all: [
-                        // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                         ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                     ], $in: [
                         ...clientIds.map((id) => {
@@ -160,9 +166,10 @@ function search(req, res) {
                         ? { name: 'paymentNo', value: { $regex: toHalfWidth(paymentNo.replace(/\s/g, '')) } }
                         : undefined
                 })
-            }, additionalTicketText: (watcherName !== null)
+            },
+            additionalTicketText: (watcherName !== null)
                 ? { $regex: watcherName, $options: 'i' }
-                : undefined }, {
+                : undefined,
             // brokerのusernameで検索
             broker: {
                 identifier: {
@@ -171,7 +178,7 @@ function search(req, res) {
                     ]
                 }
             }
-        });
+        };
         // Cinerinoでの予約検索
         debug('searching reservations...', searchConditions);
         const reservationService = new chevreapi.service.Reservation({
@@ -201,7 +208,8 @@ function search(req, res) {
             });
         }
         catch (error) {
-            res.status(http_status_1.INTERNAL_SERVER_ERROR).json({
+            res.status(http_status_1.INTERNAL_SERVER_ERROR)
+                .json({
                 errors: [{
                         message: error.message
                     }]
@@ -255,12 +263,7 @@ function addCustomAttributes(reservations, paymentMethods) {
         }
         return Object.assign(Object.assign({}, reservation), { checkins, orderNumber: orderNumber, paymentNo: paymentNo, payment_method_name: (POS_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '---'
-                : paymentMethod2name(paymentMethod4reservation, paymentMethods), performance: reservation.reservationFor.id, 
-            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
-            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_canceled: false,
-            ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
+                : paymentMethod2name(paymentMethod4reservation, paymentMethods), performance: reservation.reservationFor.id, ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'
                 : (POS_CLIENT_IDS.indexOf(clientId) >= 0) ? 'POS' : '一般ネット予約', purchaser_last_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.familyName) === 'string') ? underName.familyName : '', purchaser_first_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.givenName) === 'string') ? underName.givenName : '', purchaser_tel: (typeof (underName === null || underName === void 0 ? void 0 : underName.telephone) === 'string') ? underName.telephone : '', watcher_name: reservation.additionalTicketText });
     });
