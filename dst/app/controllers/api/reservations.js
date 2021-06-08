@@ -13,7 +13,7 @@ exports.cancel = exports.search = void 0;
 /**
  * 予約APIコントローラー
  */
-const cinerinoapi = require("@cinerino/sdk");
+const chevreapi = require("@chevre/api-nodejs-client");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -129,15 +129,22 @@ function search(req, res) {
                 break;
             default:
         }
-        const searchConditions = Object.assign({ limit: limit, page: page, sort: {
+        const searchConditions = {
+            limit: limit,
+            page: page,
+            sort: {
                 'reservationFor.startDate': 1,
                 reservationNumber: 1,
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
-            }, typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation, reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed], reservationFor: {
+            },
+            typeOf: chevreapi.factory.reservationType.EventReservation,
+            reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
+            reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
-            }, underName: {
+            },
+            underName: {
                 familyName: (purchaserLastName !== null)
                     ? { $regex: purchaserLastName, $options: 'i' }
                     : undefined,
@@ -149,7 +156,6 @@ function search(req, res) {
                     : undefined,
                 telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
                 identifier: Object.assign({ $all: [
-                        // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                         ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                     ], $in: [
                         ...clientIds.map((id) => {
@@ -160,9 +166,10 @@ function search(req, res) {
                         ? { name: 'paymentNo', value: { $regex: toHalfWidth(paymentNo.replace(/\s/g, '')) } }
                         : undefined
                 })
-            }, additionalTicketText: (watcherName !== null)
+            },
+            additionalTicketText: (watcherName !== null)
                 ? { $regex: watcherName, $options: 'i' }
-                : undefined }, {
+                : undefined,
             // brokerのusernameで検索
             broker: {
                 identifier: {
@@ -171,13 +178,13 @@ function search(req, res) {
                     ]
                 }
             }
-        });
+        };
         // Cinerinoでの予約検索
         debug('searching reservations...', searchConditions);
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
+        const reservationService = new chevreapi.service.Reservation({
+            endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+            project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         try {
             // 総数検索
@@ -201,7 +208,8 @@ function search(req, res) {
             });
         }
         catch (error) {
-            res.status(http_status_1.INTERNAL_SERVER_ERROR).json({
+            res.status(http_status_1.INTERNAL_SERVER_ERROR)
+                .json({
                 errors: [{
                         message: error.message
                     }]
@@ -255,12 +263,7 @@ function addCustomAttributes(reservations, paymentMethods) {
         }
         return Object.assign(Object.assign({}, reservation), { checkins, orderNumber: orderNumber, paymentNo: paymentNo, payment_method_name: (POS_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '---'
-                : paymentMethod2name(paymentMethod4reservation, paymentMethods), performance: reservation.reservationFor.id, 
-            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
-            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_canceled: false,
-            ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
+                : paymentMethod2name(paymentMethod4reservation, paymentMethods), performance: reservation.reservationFor.id, ticket_type_name: reservation.reservedTicket.ticketType.name, transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'
                 : (POS_CLIENT_IDS.indexOf(clientId) >= 0) ? 'POS' : '一般ネット予約', purchaser_last_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.familyName) === 'string') ? underName.familyName : '', purchaser_first_name: (typeof (underName === null || underName === void 0 ? void 0 : underName.givenName) === 'string') ? underName.givenName : '', purchaser_tel: (typeof (underName === null || underName === void 0 ? void 0 : underName.telephone) === 'string') ? underName.telephone : '', watcher_name: reservation.additionalTicketText });
     });
@@ -312,29 +315,49 @@ function cancel(req, res, next) {
             if (!Array.isArray(reservationIds)) {
                 throw new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。');
             }
-            const reservationService = new cinerinoapi.service.Reservation({
-                endpoint: process.env.CINERINO_API_ENDPOINT,
+            // const reservationService = new cinerinoapi.service.Reservation({
+            //     endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+            //     auth: req.tttsAuthClient,
+            //     project: { id: req.project?.id }
+            // });
+            const cancelReservationService = new chevreapi.service.assetTransaction.CancelReservation({
+                endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
-                project: { id: (_a = req.project) === null || _a === void 0 ? void 0 : _a.id }
+                project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
             });
             const promises = reservationIds.map((id) => __awaiter(this, void 0, void 0, function* () {
-                var _b, _c, _d;
-                // 予約データの解放
+                var _b, _c, _d, _e, _f;
+                // IDごとに予約取消
                 try {
-                    yield reservationService.cancel({
-                        project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' },
-                        typeOf: cinerinoapi.factory.chevre.transactionType.CancelReservation,
+                    // await reservationService.cancel({
+                    //     project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                    //     typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                    //     agent: {
+                    //         typeOf: chevreapi.factory.personType.Person,
+                    //         id: String(req.session?.staffUser?.sub),
+                    //         name: String(req.staffUser?.username)
+                    //     },
+                    //     object: {
+                    //         reservation: { id }
+                    //     },
+                    //     expires: moment()
+                    //         .add(1, 'minutes')
+                    //         .toDate()
+                    // });
+                    yield cancelReservationService.startAndConfirm({
+                        project: { typeOf: chevreapi.factory.organizationType.Project, id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) },
+                        typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                        expires: moment()
+                            .add(1, 'minute')
+                            .toDate(),
                         agent: {
-                            typeOf: cinerinoapi.factory.personType.Person,
-                            id: String((_c = (_b = req.session) === null || _b === void 0 ? void 0 : _b.staffUser) === null || _c === void 0 ? void 0 : _c.sub),
-                            name: String((_d = req.staffUser) === null || _d === void 0 ? void 0 : _d.username)
+                            typeOf: chevreapi.factory.personType.Person,
+                            id: String((_d = (_c = req.session) === null || _c === void 0 ? void 0 : _c.staffUser) === null || _d === void 0 ? void 0 : _d.sub),
+                            name: `${(_e = req.staffUser) === null || _e === void 0 ? void 0 : _e.givenName} ${(_f = req.staffUser) === null || _f === void 0 ? void 0 : _f.familyName}`
                         },
                         object: {
                             reservation: { id }
-                        },
-                        expires: moment()
-                            .add(1, 'minutes')
-                            .toDate()
+                        }
                     });
                     successIds.push(id);
                 }

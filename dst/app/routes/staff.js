@@ -14,23 +14,25 @@ staffRouter.get('/mypage/printByToken', authentication_1.default, myPageControll
 staffRouter.post('/mypage/print/token', authentication_1.default, myPageController.getPrintToken);
 // 運行・オンライン販売停止設定コントローラー
 staffRouter.get('/suspension/setting/performances', authentication_1.default, suspensionController.performances);
-staffRouter.get('/auth', (req, res) => {
-    try {
-        if (req.session === undefined) {
-            throw new Error('session undefined.');
-        }
-        res.json({
-            success: true,
-            token: req.tttsAuthClient.credentials,
-            errors: null
-        });
-    }
-    catch (error) {
-        res.json({
-            success: false,
-            token: null,
-            errors: error
-        });
-    }
-});
+// staffRouter.get(
+//     '/auth',
+//     (req, res) => {
+//         try {
+//             if (req.session === undefined) {
+//                 throw new Error('session undefined.');
+//             }
+//             res.json({
+//                 success: true,
+//                 token: req.tttsAuthClient.credentials,
+//                 errors: null
+//             });
+//         } catch (error) {
+//             res.json({
+//                 success: false,
+//                 token: null,
+//                 errors: error
+//             });
+//         }
+//     }
+// );
 exports.default = staffRouter;

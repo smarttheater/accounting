@@ -12,21 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * ダッシュボードルーター
  */
-const cinerinoapi = require("@cinerino/sdk");
 const express = require("express");
 const dashboardRouter = express.Router();
-dashboardRouter.get('/', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+dashboardRouter.get('/', (__, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const projectService = new cinerinoapi.service.Project({
-            endpoint: process.env.CINERINO_API_ENDPOINT,
-            auth: req.tttsAuthClient
-        });
-        const searchProjectsResult = yield projectService.search({});
-        const projects = searchProjectsResult.data;
         res.render('dashboard', {
             layout: 'layouts/dashboard',
             message: 'Welcome to Cinerino Console!',
-            projects: projects,
+            projects: [],
             extractScripts: true
         });
     }

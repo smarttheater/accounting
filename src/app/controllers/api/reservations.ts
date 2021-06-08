@@ -1,7 +1,7 @@
 /**
  * 予約APIコントローラー
  */
-import * as cinerinoapi from '@cinerino/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 import * as createDebug from 'debug';
 import { NextFunction, Request, Response } from 'express';
@@ -28,10 +28,9 @@ export interface ICheckin {
     when: Date; // いつ
 }
 
-export type IReservation
-    = cinerinoapi.factory.chevre.reservation.IReservation<cinerinoapi.factory.chevre.reservationType.EventReservation> & {
-        checkins: ICheckin[];
-    };
+export type IReservation = chevreapi.factory.reservation.IReservation<chevreapi.factory.reservationType.EventReservation> & {
+    checkins: ICheckin[];
+};
 
 /**
  * 予約検索
@@ -142,8 +141,7 @@ export async function search(req: Request, res: Response): Promise<void> {
         default:
     }
 
-    const searchConditions:
-        cinerinoapi.factory.chevre.reservation.ISearchConditions<cinerinoapi.factory.chevre.reservationType.EventReservation> = {
+    const searchConditions: chevreapi.factory.reservation.ISearchConditions<chevreapi.factory.reservationType.EventReservation> = {
         limit: limit,
         page: page,
         sort: <any>{
@@ -152,8 +150,8 @@ export async function search(req: Request, res: Response): Promise<void> {
             'reservedTicket.ticketType.id': 1,
             'reservedTicket.ticketedSeat.seatNumber': 1
         },
-        typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-        reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
+        typeOf: chevreapi.factory.reservationType.EventReservation,
+        reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
         reservationFor: {
             startFrom: eventStartFrom,
             startThrough: eventStartThrough
@@ -171,7 +169,6 @@ export async function search(req: Request, res: Response): Promise<void> {
             telephone: (purchaserTel !== null) ? `${purchaserTel}$` : undefined,
             identifier: {
                 $all: [
-                    // ...(owner !== null) ? [{ name: 'username', value: owner }] : [],
                     ...(paymentMethod !== null) ? [{ name: 'paymentMethod', value: paymentMethod }] : []
                 ],
                 $in: [
@@ -189,24 +186,22 @@ export async function search(req: Request, res: Response): Promise<void> {
         additionalTicketText: (watcherName !== null)
             ? { $regex: watcherName, $options: 'i' }
             : undefined,
-        ...{
-            // brokerのusernameで検索
-            broker: {
-                identifier: {
-                    $all: [
-                        ...(owner !== null) ? [{ name: 'username', value: owner }] : []
-                    ]
-                }
+        // brokerのusernameで検索
+        broker: {
+            identifier: {
+                $all: [
+                    ...(owner !== null) ? [{ name: 'username', value: owner }] : []
+                ]
             }
         }
     };
 
     // Cinerinoでの予約検索
     debug('searching reservations...', searchConditions);
-    const reservationService = new cinerinoapi.service.Reservation({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const reservationService = new chevreapi.service.Reservation({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
     try {
@@ -236,11 +231,12 @@ export async function search(req: Request, res: Response): Promise<void> {
             message: message
         });
     } catch (error) {
-        res.status(INTERNAL_SERVER_ERROR).json({
-            errors: [{
-                message: error.message
-            }]
-        });
+        res.status(INTERNAL_SERVER_ERROR)
+            .json({
+                errors: [{
+                    message: error.message
+                }]
+            });
     }
 }
 
@@ -300,10 +296,6 @@ function addCustomAttributes(reservations: IReservation[], paymentMethods: IPaym
                 ? '---'
                 : paymentMethod2name(paymentMethod4reservation, paymentMethods),
             performance: reservation.reservationFor.id,
-            // performance_day: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('YYYYMMDD'),
-            // performance_start_time: moment(reservation.reservationFor.startDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_end_time: moment(reservation.reservationFor.endDate).tz('Asia/Tokyo').format('HHmm'),
-            // performance_canceled: false,
             ticket_type_name: reservation.reservedTicket.ticketType.name,
             transactionAgentName: (STAFF_CLIENT_IDS.indexOf(clientId) >= 0)
                 ? '窓口代理予約'
@@ -368,29 +360,50 @@ export async function cancel(req: Request, res: Response, next: NextFunction): P
             throw new Error('システムエラーが発生しました。ご不便をおかけして申し訳ありませんがしばらく経ってから再度お試しください。');
         }
 
-        const reservationService = new cinerinoapi.service.Reservation({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        // const reservationService = new cinerinoapi.service.Reservation({
+        //     endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        //     auth: req.tttsAuthClient,
+        //     project: { id: req.project?.id }
+        // });
+        const cancelReservationService = new chevreapi.service.assetTransaction.CancelReservation({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
 
         const promises = reservationIds.map(async (id) => {
-            // 予約データの解放
+            // IDごとに予約取消
             try {
-                await reservationService.cancel({
-                    project: { typeOf: cinerinoapi.factory.chevre.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
-                    typeOf: cinerinoapi.factory.chevre.transactionType.CancelReservation,
+                // await reservationService.cancel({
+                //     project: { typeOf: chevreapi.factory.organizationType.Project, id: '' }, // プロジェクト指定は実質無意味
+                //     typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                //     agent: {
+                //         typeOf: chevreapi.factory.personType.Person,
+                //         id: String(req.session?.staffUser?.sub),
+                //         name: String(req.staffUser?.username)
+                //     },
+                //     object: {
+                //         reservation: { id }
+                //     },
+                //     expires: moment()
+                //         .add(1, 'minutes')
+                //         .toDate()
+                // });
+
+                await cancelReservationService.startAndConfirm({
+                    project: { typeOf: chevreapi.factory.organizationType.Project, id: String(req.project?.id) }, // プロジェクト指定は実質無意味
+                    typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                    expires: moment()
+                        .add(1, 'minute')
+                        .toDate(),
                     agent: {
-                        typeOf: cinerinoapi.factory.personType.Person,
+                        typeOf: chevreapi.factory.personType.Person,
                         id: String(req.session?.staffUser?.sub),
-                        name: String(req.staffUser?.username)
+                        name: `${req.staffUser?.givenName} ${req.staffUser?.familyName}`
                     },
                     object: {
                         reservation: { id }
-                    },
-                    expires: moment()
-                        .add(1, 'minutes')
-                        .toDate()
+                    }
                 });
 
                 successIds.push(id);

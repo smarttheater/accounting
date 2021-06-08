@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
-const cinerinoapi = require("@cinerino/sdk");
+const chevreapi = require("@chevre/api-nodejs-client");
 /**
  * 管理ユーザー
  */
@@ -28,7 +28,7 @@ class User {
             user.telephone = session.staffUser.telephone;
             user.username = session.staffUser.username;
         }
-        user.authClient = new cinerinoapi.auth.OAuth2({
+        user.authClient = new chevreapi.auth.OAuth2({
             domain: process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: process.env.API_CLIENT_ID,
             clientSecret: process.env.API_CLIENT_SECRET,
@@ -55,7 +55,7 @@ class User {
         return this.authClient.generateLogoutUrl();
     }
     generateLegacyLogoutUrl(redirect) {
-        const authClient = new cinerinoapi.auth.OAuth2({
+        const authClient = new chevreapi.auth.OAuth2({
             domain: process.env.API_AUTHORIZE_SERVER_DOMAIN,
             clientId: process.env.API_CLIENT_ID,
             clientSecret: process.env.API_CLIENT_SECRET,

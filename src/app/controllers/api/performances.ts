@@ -1,7 +1,7 @@
 /**
  * パフォーマンスAPIコントローラー
  */
-import * as cinerinoapi from '@cinerino/sdk';
+import * as chevreapi from '@chevre/api-nodejs-client';
 
 import * as createDebug from 'debug';
 import * as Email from 'email-templates';
@@ -18,17 +18,17 @@ const FRONTEND_CLIENT_IDS = (typeof process.env.FRONTEND_CLIENT_ID === 'string')
     ? process.env.FRONTEND_CLIENT_ID.split(',')
     : [];
 
-export type IReservationOrderItem = cinerinoapi.factory.order.IReservation;
-export type ICompoundPriceSpecification = cinerinoapi.factory.chevre.compoundPriceSpecification.IPriceSpecification<any>;
+export type IReservationOrderItem = chevreapi.factory.order.IReservation;
+export type ICompoundPriceSpecification = chevreapi.factory.compoundPriceSpecification.IPriceSpecification<any>;
 
-function getUnitPriceByAcceptedOffer(offer: cinerinoapi.factory.order.IAcceptedOffer<any>) {
+function getUnitPriceByAcceptedOffer(offer: chevreapi.factory.order.IAcceptedOffer<any>) {
     let unitPrice: number = 0;
 
     if (offer.priceSpecification !== undefined) {
         const priceSpecification = <ICompoundPriceSpecification>offer.priceSpecification;
         if (Array.isArray(priceSpecification.priceComponent)) {
             const unitPriceSpec = priceSpecification.priceComponent.find(
-                (c) => c.typeOf === cinerinoapi.factory.chevre.priceSpecificationType.UnitPriceSpecification
+                (c) => c.typeOf === chevreapi.factory.priceSpecificationType.UnitPriceSpecification
             );
             if (unitPriceSpec !== undefined && unitPriceSpec.price !== undefined && Number.isInteger(unitPriceSpec.price)) {
                 unitPrice = unitPriceSpec.price;
@@ -52,15 +52,15 @@ export async function search(req: Request, res: Response): Promise<void> {
         // useLegacySearch: '1'
         const day = String(req.query.day);
 
-        const eventService = new cinerinoapi.service.Event({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        const eventService = new chevreapi.service.Event({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
         const searchResult = await eventService.search({
             limit: 100,
             page: 1,
-            typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent,
+            typeOf: chevreapi.factory.eventType.ScreeningEvent,
             // tslint:disable-next-line:no-magic-numbers
             startFrom: moment(`${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}T00:00:00+09:00`)
                 .toDate(),
@@ -104,7 +104,7 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
         }
 
         // パフォーマンス・予約(入塔記録のないもの)のステータス更新
-        const evStatus: cinerinoapi.factory.chevre.eventStatusType = req.body.evStatus;
+        const evStatus: chevreapi.factory.eventStatusType = req.body.evStatus;
         const notice: string = req.body.notice;
         debug('updating performances...', performanceIds, evStatus, notice);
 
@@ -113,33 +113,32 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
         // 返金対象注文情報取得
         const targetOrders = await getTargetReservationsForRefund(req, performanceIds);
 
-        const eventService = new cinerinoapi.service.Event({
-            endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+        const eventService = new chevreapi.service.Event({
+            endpoint: <string>process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
-            project: { id: req.project?.id }
+            project: { id: String(req.project?.id) }
         });
 
-        const searchEventsResult = await eventService.search<cinerinoapi.factory.chevre.eventType.ScreeningEvent>({
+        const searchEventsResult = await eventService.search<chevreapi.factory.eventType.ScreeningEvent>({
             limit: 100,
-            typeOf: cinerinoapi.factory.chevre.eventType.ScreeningEvent,
-            ...{
-                id: { $in: performanceIds }
-            }
+            page: 1,
+            typeOf: chevreapi.factory.eventType.ScreeningEvent,
+            id: { $in: performanceIds }
         });
         const updatingEvents = searchEventsResult.data;
 
         for (const updatingEvent of updatingEvents) {
             const performanceId = updatingEvent.id;
 
-            let sendEmailMessageParams: cinerinoapi.factory.action.transfer.send.message.email.IAttributes[] = [];
+            let sendEmailMessageParams: chevreapi.factory.action.transfer.send.message.email.IAttributes[] = [];
 
             // 運行停止の時(＜必ずオンライン販売停止・infoセット済)、Cinerinoにメール送信指定
-            if (evStatus === cinerinoapi.factory.chevre.eventStatusType.EventCancelled) {
+            if (evStatus === chevreapi.factory.eventStatusType.EventCancelled) {
                 const targetOrders4performance = targetOrders.filter((o) => {
                     return o.acceptedOffers.some((offer) => {
-                        const reservation = <cinerinoapi.factory.order.IReservation>offer.itemOffered;
+                        const reservation = <chevreapi.factory.order.IReservation>offer.itemOffered;
 
-                        return reservation.typeOf === cinerinoapi.factory.chevre.reservationType.EventReservation
+                        return reservation.typeOf === chevreapi.factory.reservationType.EventReservation
                             && reservation.reservationFor.id === performanceId;
                     });
                 });
@@ -147,10 +146,18 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
             }
 
             // Chevreイベントステータスに反映
+            // await eventService.updatePartially({
+            //     id: performanceId,
+            //     eventStatus: evStatus,
+            //     onUpdated: {
+            //         sendEmailMessage: sendEmailMessageParams
+            //     }
+            // });
             await eventService.updatePartially({
                 id: performanceId,
-                eventStatus: evStatus,
-                ...{
+                attributes: {
+                    typeOf: updatingEvent.typeOf,
+                    eventStatus: evStatus,
                     onUpdated: {
                         sendEmailMessage: sendEmailMessageParams
                     }
@@ -175,31 +182,31 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
  * [同一購入単位に入塔記録のない]予約のid配列
  */
 // tslint:disable-next-line:max-func-body-length
-async function getTargetReservationsForRefund(req: Request, performanceIds: string[]): Promise<cinerinoapi.factory.order.IOrder[]> {
-    const orderService = new cinerinoapi.service.Order({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+async function getTargetReservationsForRefund(req: Request, performanceIds: string[]): Promise<chevreapi.factory.order.IOrder[]> {
+    const orderService = new chevreapi.service.Order({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
-    const reservationService = new cinerinoapi.service.Reservation({
-        endpoint: <string>process.env.CINERINO_API_ENDPOINT,
+    const reservationService = new chevreapi.service.Reservation({
+        endpoint: <string>process.env.API_ENDPOINT,
         auth: req.tttsAuthClient,
-        project: { id: req.project?.id }
+        project: { id: String(req.project?.id) }
     });
 
     let targetReservations:
-        cinerinoapi.factory.chevre.reservation.IReservation<cinerinoapi.factory.chevre.reservationType.EventReservation>[] = [];
+        chevreapi.factory.reservation.IReservation<chevreapi.factory.reservationType.EventReservation>[] = [];
     const limit4reservations = 100;
     let page4reservations = 0;
     let numData4reservations: number = limit4reservations;
     while (numData4reservations === limit4reservations) {
         page4reservations += 1;
-        const searchReservationsResult = await reservationService.search<cinerinoapi.factory.chevre.reservationType.EventReservation>({
+        const searchReservationsResult = await reservationService.search<chevreapi.factory.reservationType.EventReservation>({
             limit: limit4reservations,
             page: page4reservations,
-            typeOf: cinerinoapi.factory.chevre.reservationType.EventReservation,
-            reservationStatuses: [cinerinoapi.factory.chevre.reservationStatusType.ReservationConfirmed],
+            typeOf: chevreapi.factory.reservationType.EventReservation,
+            reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
             // クライアントがfrontend or pos
             underName: {
                 identifiers: [
@@ -241,7 +248,7 @@ async function getTargetReservationsForRefund(req: Request, performanceIds: stri
     );
 
     // 全注文検索
-    const orders: cinerinoapi.factory.order.IOrder[] = [];
+    const orders: chevreapi.factory.order.IOrder[] = [];
     if (targetOrderNumbers.length > 0) {
         const limit = 10;
         let page = 0;
@@ -251,6 +258,7 @@ async function getTargetReservationsForRefund(req: Request, performanceIds: stri
             const searchOrdersResult = await orderService.search({
                 limit: limit,
                 page: page,
+                project: { id: { $eq: req.project?.id } },
                 orderNumbers: targetOrderNumbers
             });
             numData = searchOrdersResult.data.length;
@@ -265,9 +273,9 @@ async function getTargetReservationsForRefund(req: Request, performanceIds: stri
  * 運行・オンライン販売停止メール作成
  */
 async function createEmails(
-    orders: cinerinoapi.factory.order.IOrder[],
+    orders: chevreapi.factory.order.IOrder[],
     notice: string
-): Promise<cinerinoapi.factory.action.transfer.send.message.email.IAttributes[]> {
+): Promise<chevreapi.factory.action.transfer.send.message.email.IAttributes[]> {
     if (orders.length === 0) {
         return [];
     }
@@ -281,9 +289,9 @@ async function createEmails(
  * 運行・オンライン販売停止メール作成(1通)
  */
 async function createEmail(
-    order: cinerinoapi.factory.order.IOrder,
+    order: chevreapi.factory.order.IOrder,
     notice: string
-): Promise<cinerinoapi.factory.action.transfer.send.message.email.IAttributes> {
+): Promise<chevreapi.factory.action.transfer.send.message.email.IAttributes> {
     const purchaserNameJp = `${order.customer.familyName} ${order.customer.givenName}`;
     const purchaserName: string = `${purchaserNameJp}様`;
     const purchaserNameEn: string = `Mr./Ms.${<string>order.customer.name}`;
@@ -308,9 +316,8 @@ async function createEmail(
     });
 
     // メール作成
-    const emailMessage: cinerinoapi.factory.creativeWork.message.email.ICreativeWork = {
-        project: { typeOf: order.project.typeOf, id: order.project.id },
-        typeOf: cinerinoapi.factory.chevre.creativeWorkType.EmailMessage,
+    const emailMessage: chevreapi.factory.creativeWork.message.email.ICreativeWork = {
+        typeOf: chevreapi.factory.creativeWorkType.EmailMessage,
         identifier: `updateOnlineStatus-${order.orderNumber}`,
         name: `updateOnlineStatus-${order.orderNumber}`,
         sender: {
@@ -327,7 +334,7 @@ async function createEmail(
         text: content
     };
 
-    const purpose: cinerinoapi.factory.order.ISimpleOrder = {
+    const purpose: chevreapi.factory.order.ISimpleOrder = {
         project: { typeOf: order.project.typeOf, id: order.project.id },
         typeOf: order.typeOf,
         seller: order.seller,
@@ -341,9 +348,9 @@ async function createEmail(
     };
 
     return {
-        typeOf: cinerinoapi.factory.actionType.SendAction,
+        typeOf: chevreapi.factory.actionType.SendAction,
         agent: {
-            typeOf: cinerinoapi.factory.personType.Person,
+            typeOf: chevreapi.factory.personType.Person,
             id: ''
         },
         object: emailMessage,
@@ -357,7 +364,7 @@ async function createEmail(
     };
 }
 
-function createPaymentTicketInfoText(order: cinerinoapi.factory.order.IOrder): string {
+function createPaymentTicketInfoText(order: chevreapi.factory.order.IOrder): string {
     const reservation = <IReservationOrderItem>order.acceptedOffers[0].itemOffered;
 
     // ご来塔日時 : 2017/12/10 09:15
@@ -392,7 +399,7 @@ function createPaymentTicketInfoText(order: cinerinoapi.factory.order.IOrder): s
 /**
  * チケット情報取得
  */
-function getTicketInfo(order: cinerinoapi.factory.order.IOrder, locale: string): string[] {
+function getTicketInfo(order: chevreapi.factory.order.IOrder, locale: string): string[] {
     const acceptedOffers = order.acceptedOffers;
 
     // チケットコード順にソート

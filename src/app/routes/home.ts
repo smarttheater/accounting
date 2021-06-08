@@ -1,7 +1,6 @@
 /**
  * プロジェクトホームルーター
  */
-// import * as cinerinoapi from '@cinerino/sdk';
 // import * as createDebug from 'debug';
 import * as express from 'express';
 // import { INTERNAL_SERVER_ERROR } from 'http-status';
