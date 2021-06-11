@@ -45,12 +45,10 @@ function search(req, res) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Cinerinoで検索
+            // Chevreで検索
             // query:
             // page: 1,
             // day: ymd,
-            // noTotalCount: '1',
-            // useLegacySearch: '1'
             const day = String(req.query.day);
             const eventService = new chevreapi.service.Event({
                 endpoint: process.env.API_ENDPOINT,
@@ -130,13 +128,6 @@ function updateOnlineStatus(req, res) {
                     sendEmailMessageParams = yield createEmails(targetOrders4performance, notice);
                 }
                 // Chevreイベントステータスに反映
-                // await eventService.updatePartially({
-                //     id: performanceId,
-                //     eventStatus: evStatus,
-                //     onUpdated: {
-                //         sendEmailMessage: sendEmailMessageParams
-                //     }
-                // });
                 yield eventService.updatePartially({
                     id: performanceId,
                     attributes: {

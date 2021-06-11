@@ -44,12 +44,10 @@ function getUnitPriceByAcceptedOffer(offer: chevreapi.factory.order.IAcceptedOff
  */
 export async function search(req: Request, res: Response): Promise<void> {
     try {
-        // Cinerinoで検索
+        // Chevreで検索
         // query:
         // page: 1,
         // day: ymd,
-        // noTotalCount: '1',
-        // useLegacySearch: '1'
         const day = String(req.query.day);
 
         const eventService = new chevreapi.service.Event({
@@ -146,13 +144,6 @@ export async function updateOnlineStatus(req: Request, res: Response): Promise<v
             }
 
             // Chevreイベントステータスに反映
-            // await eventService.updatePartially({
-            //     id: performanceId,
-            //     eventStatus: evStatus,
-            //     onUpdated: {
-            //         sendEmailMessage: sendEmailMessageParams
-            //     }
-            // });
             await eventService.updatePartially({
                 id: performanceId,
                 attributes: {

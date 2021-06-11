@@ -211,8 +211,7 @@ $(function () {
             ymd = dateStr.replace(/\-/g, ''); // Y-m-dをYmdに整形
             search({
                 page: 1,
-                day: ymd,
-                noTotalCount: '1'
+                day: ymd
             });
         }
     });
@@ -331,8 +330,7 @@ $(function () {
             busy_suspend = false;
             search({
                 page: 1,
-                day: ymd,
-                noTotalCount: '1'
+                day: ymd
             });
         });
     };
