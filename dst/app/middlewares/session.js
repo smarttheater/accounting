@@ -16,11 +16,20 @@ exports.default = session({
     rolling: true,
     saveUninitialized: false,
     store: new redisStore({
-        client: redis.createClient(Number(process.env.REDIS_PORT), process.env.REDIS_HOST, {
+        client: redis.createClient({
+            port: Number(process.env.REDIS_PORT),
+            host: process.env.REDIS_HOST,
             password: process.env.REDIS_KEY,
-            tls: { servername: process.env.REDIS_HOST },
-            return_buffers: true
-        })
+            tls: (process.env.REDIS_TLS_SERVERNAME !== undefined) ? { servername: process.env.REDIS_TLS_SERVERNAME } : undefined
+        }
+        // Number(process.env.REDIS_PORT),
+        // process.env.REDIS_HOST,
+        // {
+        //     password: process.env.REDIS_KEY,
+        //     tls: { servername: process.env.REDIS_HOST },
+        //     return_buffers: true
+        // }
+        )
     }),
     cookie: {
         maxAge: COOKIE_MAX_AGE

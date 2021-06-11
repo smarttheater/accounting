@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/api-nodejs-client": "3.84.0",
+    "@chevre/api-nodejs-client": "3.84.4",
     "@motionpicture/express-middleware": "0.0.0",
     "admin-lte": "^3.0.5",
     "body-parser": "^1.18.2",
@@ -97,5 +97,5 @@
     "version": "git add -A",
     "postversion": "git push origin --tags"
   },
-  "version": "7.3.0"
+  "version": "7.3.1"
 }
