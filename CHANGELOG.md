@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- セッションのRedisクライアントをGCPに対応
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v7.3.1 - 2021-06-11
+
+### Changed
+
+- セッションのRedisクライアントをGCPに対応
 
 ## v7.3.0 - 2021-06-08
 
