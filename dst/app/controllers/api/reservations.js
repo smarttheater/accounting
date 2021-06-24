@@ -13,7 +13,7 @@ exports.cancel = exports.search = void 0;
 /**
  * 予約APIコントローラー
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const sdk_1 = require("@cinerino/sdk");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -138,8 +138,8 @@ function search(req, res) {
                 'reservedTicket.ticketType.id': 1,
                 'reservedTicket.ticketedSeat.seatNumber': 1
             },
-            typeOf: chevreapi.factory.reservationType.EventReservation,
-            reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed],
+            typeOf: sdk_1.chevre.factory.reservationType.EventReservation,
+            reservationStatuses: [sdk_1.chevre.factory.reservationStatusType.ReservationConfirmed],
             reservationFor: {
                 startFrom: eventStartFrom,
                 startThrough: eventStartThrough
@@ -181,7 +181,7 @@ function search(req, res) {
         };
         // Cinerinoでの予約検索
         debug('searching reservations...', searchConditions);
-        const reservationService = new chevreapi.service.Reservation({
+        const reservationService = new sdk_1.chevre.service.Reservation({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
@@ -320,7 +320,7 @@ function cancel(req, res, next) {
             //     auth: req.tttsAuthClient,
             //     project: { id: req.project?.id }
             // });
-            const cancelReservationService = new chevreapi.service.assetTransaction.CancelReservation({
+            const cancelReservationService = new sdk_1.chevre.service.assetTransaction.CancelReservation({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
@@ -345,13 +345,13 @@ function cancel(req, res, next) {
                     //         .toDate()
                     // });
                     yield cancelReservationService.startAndConfirm({
-                        project: { typeOf: chevreapi.factory.organizationType.Project, id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) },
-                        typeOf: chevreapi.factory.assetTransactionType.CancelReservation,
+                        project: { typeOf: sdk_1.chevre.factory.organizationType.Project, id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) },
+                        typeOf: sdk_1.chevre.factory.assetTransactionType.CancelReservation,
                         expires: moment()
                             .add(1, 'minute')
                             .toDate(),
                         agent: {
-                            typeOf: chevreapi.factory.personType.Person,
+                            typeOf: sdk_1.chevre.factory.personType.Person,
                             id: String((_d = (_c = req.session) === null || _c === void 0 ? void 0 : _c.staffUser) === null || _d === void 0 ? void 0 : _d.sub),
                             name: `${(_e = req.staffUser) === null || _e === void 0 ? void 0 : _e.givenName} ${(_f = req.staffUser) === null || _f === void 0 ? void 0 : _f.familyName}`
                         },

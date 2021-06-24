@@ -1,7 +1,7 @@
 /**
  * 運行・オンライン販売停止一覧コントローラー
  */
-import * as chevreapi from '@chevre/api-nodejs-client';
+import { chevre as chevreapi } from '@cinerino/sdk';
 
 import { NextFunction, Request, Response } from 'express';
 

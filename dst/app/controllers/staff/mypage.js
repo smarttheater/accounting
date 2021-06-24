@@ -13,7 +13,7 @@ exports.printByToken = exports.getPrintToken = exports.print = exports.searchPay
 /**
  * マイページコントローラー
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const sdk_1 = require("@cinerino/sdk");
 const createDebug = require("debug");
 const jwt = require("jsonwebtoken");
 const querystring = require("querystring");
@@ -69,13 +69,13 @@ const TICKET_CLERK_USERNAMES_EXCLUDED = ['1F-ELEVATOR', 'TOPDECK-ELEVATOR', 'LAN
 function searchTicketClerks(req) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const iamService = new chevreapi.service.IAM({
+        const iamService = new sdk_1.chevre.service.IAM({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         const searchMembersResult = yield iamService.searchMembers({
-            member: { typeOf: { $eq: chevreapi.factory.personType.Person } }
+            member: { typeOf: { $eq: sdk_1.chevre.factory.personType.Person } }
         });
         // ticketClerkロールを持つ管理者のみ表示
         return searchMembersResult.data
@@ -97,14 +97,14 @@ exports.searchTicketClerks = searchTicketClerks;
 function searchPaymentMethodTypes(req) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const categoryCodeService = new chevreapi.service.CategoryCode({
+        const categoryCodeService = new sdk_1.chevre.service.CategoryCode({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
         const searchMembersResult = yield categoryCodeService.search({
             limit: 100,
-            inCodeSet: { identifier: { $eq: chevreapi.factory.categoryCode.CategorySetIdentifier.PaymentMethodType } }
+            inCodeSet: { identifier: { $eq: sdk_1.chevre.factory.categoryCode.CategorySetIdentifier.PaymentMethodType } }
         });
         const paymentMethods = {};
         searchMembersResult.data
@@ -146,14 +146,14 @@ function print(req, res, next) {
             debug('printing reservations...ids:', ids, 'orderNumber:', orderNumbers);
             // クライアントのキャッシュ対応として、orderNumbersの指定がなければ、予約IDから自動検索
             if (ids.length > 0 && orderNumbers.length === 0) {
-                const reservationService = new chevreapi.service.Reservation({
+                const reservationService = new sdk_1.chevre.service.Reservation({
                     endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
                     project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
                 });
                 const searchReservationsResult = yield reservationService.search({
                     limit: 100,
-                    typeOf: chevreapi.factory.reservationType.EventReservation,
+                    typeOf: sdk_1.chevre.factory.reservationType.EventReservation,
                     id: { $in: ids }
                 });
                 orderNumbers = [...new Set(searchReservationsResult.data.map((reservation) => {
@@ -169,7 +169,7 @@ function print(req, res, next) {
             let orders = [];
             if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
                 // 印刷対象注文検索
-                const orderService = new chevreapi.service.Order({
+                const orderService = new sdk_1.chevre.service.Order({
                     endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
                     project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
@@ -213,7 +213,7 @@ function getPrintToken(req, res, next) {
             let orders = [];
             if (Array.isArray(orderNumbers) && orderNumbers.length > 0) {
                 // 印刷対象注文検索
-                const orderService = new chevreapi.service.Order({
+                const orderService = new sdk_1.chevre.service.Order({
                     endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
                     project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }

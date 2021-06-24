@@ -1,7 +1,7 @@
 /**
  * レポート出力コントローラー
  */
-import * as chevreapi from '@chevre/api-nodejs-client';
+import { chevre as chevreapi } from '@cinerino/sdk';
 import * as createDebug from 'debug';
 import { Request, Response } from 'express';
 import { INTERNAL_SERVER_ERROR } from 'http-status';

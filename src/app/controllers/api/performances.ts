@@ -1,7 +1,7 @@
 /**
  * パフォーマンスAPIコントローラー
  */
-import * as chevreapi from '@chevre/api-nodejs-client';
+import { chevre as chevreapi } from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
 import * as Email from 'email-templates';

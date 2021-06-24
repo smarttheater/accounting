@@ -1,4 +1,4 @@
-import * as chevreapi from '@chevre/api-nodejs-client';
+import * as chevreapi from '@cinerino/sdk';
 
 import { User } from '../app/user';
 

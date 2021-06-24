@@ -1,7 +1,7 @@
 /**
  * 予約APIコントローラー
  */
-import * as chevreapi from '@chevre/api-nodejs-client';
+import { chevre as chevreapi } from '@cinerino/sdk';
 
 import * as createDebug from 'debug';
 import { NextFunction, Request, Response } from 'express';
