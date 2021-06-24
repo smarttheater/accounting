@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * ユーザー認証ミドルウェア
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const chevreapi = require("@cinerino/sdk");
 const user_1 = require("../user");
 exports.default = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     req.staffUser = user_1.User.PARSE(req.session, req.hostname, req.originalUrl);

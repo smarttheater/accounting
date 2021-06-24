@@ -13,7 +13,7 @@ exports.getAggregateSales = exports.ReportType = exports.search = void 0;
 /**
  * レポート出力コントローラー
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const sdk_1 = require("@cinerino/sdk");
 const createDebug = require("debug");
 const http_status_1 = require("http-status");
 const moment = require("moment-timezone");
@@ -104,7 +104,7 @@ function search(req, res) {
                     'reservation.id': { $exists: true, $eq: reservationIdEq }
                 });
             }
-            const aggregateSalesService = new chevreapi.service.SalesReport({
+            const aggregateSalesService = new sdk_1.chevre.service.SalesReport({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: { id: String((_e = req.project) === null || _e === void 0 ? void 0 : _e.id) }
@@ -193,7 +193,7 @@ function getAggregateSales(req, res) {
                 });
             }
             if (req.query.format === 'json') {
-                const aggregateSalesService = new chevreapi.service.SalesReport({
+                const aggregateSalesService = new sdk_1.chevre.service.SalesReport({
                     endpoint: process.env.API_ENDPOINT,
                     auth: req.tttsAuthClient,
                     project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
@@ -241,7 +241,7 @@ function getAggregateSales(req, res) {
                             ? String(doc.payment_seat_index)
                             : '';
                         // 返品手数料の場合、値を調整
-                        if (doc.category === chevreapi.factory.report.order.ReportCategory.CancellationFee) {
+                        if (doc.category === sdk_1.chevre.factory.report.order.ReportCategory.CancellationFee) {
                             seatNumber = '';
                             ticketTypeName = '';
                             csvCode = '';

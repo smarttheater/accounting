@@ -13,7 +13,7 @@ exports.updateOnlineStatus = exports.search = void 0;
 /**
  * パフォーマンスAPIコントローラー
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const sdk_1 = require("@cinerino/sdk");
 const createDebug = require("debug");
 const Email = require("email-templates");
 const http_status_1 = require("http-status");
@@ -30,7 +30,7 @@ function getUnitPriceByAcceptedOffer(offer) {
     if (offer.priceSpecification !== undefined) {
         const priceSpecification = offer.priceSpecification;
         if (Array.isArray(priceSpecification.priceComponent)) {
-            const unitPriceSpec = priceSpecification.priceComponent.find((c) => c.typeOf === chevreapi.factory.priceSpecificationType.UnitPriceSpecification);
+            const unitPriceSpec = priceSpecification.priceComponent.find((c) => c.typeOf === sdk_1.chevre.factory.priceSpecificationType.UnitPriceSpecification);
             if (unitPriceSpec !== undefined && unitPriceSpec.price !== undefined && Number.isInteger(unitPriceSpec.price)) {
                 unitPrice = unitPriceSpec.price;
             }
@@ -50,12 +50,12 @@ function search(req, res) {
             // page: 1,
             // day: ymd,
             const day = String(req.query.day);
-            const eventService = new chevreapi.service.Event({
+            const eventService = new sdk_1.chevre.service.Event({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
             });
-            const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: chevreapi.factory.eventType.ScreeningEvent, 
+            const searchResult = yield eventService.search(Object.assign({ limit: 100, page: 1, typeOf: sdk_1.chevre.factory.eventType.ScreeningEvent, 
                 // tslint:disable-next-line:no-magic-numbers
                 startFrom: moment(`${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}T00:00:00+09:00`)
                     .toDate(), 
@@ -101,7 +101,7 @@ function updateOnlineStatus(req, res) {
             // const now = new Date();
             // 返金対象注文情報取得
             const targetOrders = yield getTargetReservationsForRefund(req, performanceIds);
-            const eventService = new chevreapi.service.Event({
+            const eventService = new sdk_1.chevre.service.Event({
                 endpoint: process.env.API_ENDPOINT,
                 auth: req.tttsAuthClient,
                 project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
@@ -109,7 +109,7 @@ function updateOnlineStatus(req, res) {
             const searchEventsResult = yield eventService.search({
                 limit: 100,
                 page: 1,
-                typeOf: chevreapi.factory.eventType.ScreeningEvent,
+                typeOf: sdk_1.chevre.factory.eventType.ScreeningEvent,
                 id: { $in: performanceIds }
             });
             const updatingEvents = searchEventsResult.data;
@@ -117,11 +117,11 @@ function updateOnlineStatus(req, res) {
                 const performanceId = updatingEvent.id;
                 let sendEmailMessageParams = [];
                 // 運行停止の時(＜必ずオンライン販売停止・infoセット済)、Cinerinoにメール送信指定
-                if (evStatus === chevreapi.factory.eventStatusType.EventCancelled) {
+                if (evStatus === sdk_1.chevre.factory.eventStatusType.EventCancelled) {
                     const targetOrders4performance = targetOrders.filter((o) => {
                         return o.acceptedOffers.some((offer) => {
                             const reservation = offer.itemOffered;
-                            return reservation.typeOf === chevreapi.factory.reservationType.EventReservation
+                            return reservation.typeOf === sdk_1.chevre.factory.reservationType.EventReservation
                                 && reservation.reservationFor.id === performanceId;
                         });
                     });
@@ -161,12 +161,12 @@ exports.updateOnlineStatus = updateOnlineStatus;
 function getTargetReservationsForRefund(req, performanceIds) {
     var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
-        const orderService = new chevreapi.service.Order({
+        const orderService = new sdk_1.chevre.service.Order({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: { id: String((_a = req.project) === null || _a === void 0 ? void 0 : _a.id) }
         });
-        const reservationService = new chevreapi.service.Reservation({
+        const reservationService = new sdk_1.chevre.service.Reservation({
             endpoint: process.env.API_ENDPOINT,
             auth: req.tttsAuthClient,
             project: { id: String((_b = req.project) === null || _b === void 0 ? void 0 : _b.id) }
@@ -177,7 +177,7 @@ function getTargetReservationsForRefund(req, performanceIds) {
         let numData4reservations = limit4reservations;
         while (numData4reservations === limit4reservations) {
             page4reservations += 1;
-            const searchReservationsResult = yield reservationService.search(Object.assign({ limit: limit4reservations, page: page4reservations, typeOf: chevreapi.factory.reservationType.EventReservation, reservationStatuses: [chevreapi.factory.reservationStatusType.ReservationConfirmed], 
+            const searchReservationsResult = yield reservationService.search(Object.assign({ limit: limit4reservations, page: page4reservations, typeOf: sdk_1.chevre.factory.reservationType.EventReservation, reservationStatuses: [sdk_1.chevre.factory.reservationStatusType.ReservationConfirmed], 
                 // クライアントがfrontend or pos
                 underName: {
                     identifiers: [
@@ -272,7 +272,7 @@ function createEmail(order, notice) {
         });
         // メール作成
         const emailMessage = {
-            typeOf: chevreapi.factory.creativeWorkType.EmailMessage,
+            typeOf: sdk_1.chevre.factory.creativeWorkType.EmailMessage,
             identifier: `updateOnlineStatus-${order.orderNumber}`,
             name: `updateOnlineStatus-${order.orderNumber}`,
             sender: {
@@ -301,9 +301,9 @@ function createEmail(order, notice) {
                 .toDate()
         };
         return {
-            typeOf: chevreapi.factory.actionType.SendAction,
+            typeOf: sdk_1.chevre.factory.actionType.SendAction,
             agent: {
-                typeOf: chevreapi.factory.personType.Person,
+                typeOf: sdk_1.chevre.factory.personType.Person,
                 id: ''
             },
             object: emailMessage,

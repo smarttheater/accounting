@@ -13,7 +13,7 @@ exports.performances = void 0;
 /**
  * 運行・オンライン販売停止一覧コントローラー
  */
-const chevreapi = require("@chevre/api-nodejs-client");
+const sdk_1 = require("@cinerino/sdk");
 const layout = 'layouts/staff/layout';
 /**
  * スケジュール選択
@@ -24,7 +24,7 @@ function performances(__, res, next) {
             // 運行・オンライン販売停止設定画面表示
             res.render('staff/suspension/performances', {
                 layout: layout,
-                EventStatusType: chevreapi.factory.eventStatusType
+                EventStatusType: sdk_1.chevre.factory.eventStatusType
             });
         }
         catch (error) {
